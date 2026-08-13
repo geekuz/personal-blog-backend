@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: personal-blog-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/personal_blog}
+    username: ${DATABASE_USERNAME:blog}
+    password: ${DATABASE_PASSWORD:blog}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  jackson:
+    time-zone: UTC
+  mvc:
+    problemdetails:
+      enabled: false
+blog:
+  cors:
+    allowed-origins: ${BLOG_ALLOWED_ORIGINS:http://localhost:5173}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

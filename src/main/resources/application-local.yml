@@ -1,0 +1,10 @@
+# Safe local defaults. Override with environment variables when needed.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/personal_blog
+    username: blog
+    password: blog
+blog:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
