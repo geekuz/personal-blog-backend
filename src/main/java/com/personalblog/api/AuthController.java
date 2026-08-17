@@ -6,6 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.personalblog.email.EmailDeliveryException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,12 +23,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/api/v1/auth", produces = "application/json;charset=UTF-8")
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final BlogUserService users;
+    private final EmailVerificationService verification;
     private final AuthenticationManager authenticationManager;
     private final HttpSessionSecurityContextRepository contexts = new HttpSessionSecurityContextRepository();
 
-    public AuthController(BlogUserService users, AuthenticationManager authenticationManager) {
+    public AuthController(BlogUserService users, EmailVerificationService verification,
+                          AuthenticationManager authenticationManager) {
         this.users = users;
+        this.verification = verification;
         this.authenticationManager = authenticationManager;
     }
 
@@ -35,7 +42,24 @@ public class AuthController {
     @PostMapping(value = "/register", consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@Valid @RequestBody RegisterRequest request) {
-        return response(users.register(request.email(), request.password(), request.displayName()));
+        BlogUser user = users.register(request.email(), request.password(), request.displayName());
+        try {
+            verification.issue(user);
+        } catch (EmailDeliveryException ex) {
+            log.warn("Account created but verification email delivery failed for {}", user.getEmail(), ex);
+        }
+        return response(user);
+    }
+
+    @PostMapping(value = "/verify-email", consumes = "application/json")
+    public UserResponse verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        return response(verification.verify(request.token()));
+    }
+
+    @PostMapping("/verification/resend")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void resendVerification(Authentication authentication) {
+        verification.issue(users.byEmail(authentication.getName()));
     }
 
     @PostMapping(value = "/login", consumes = "application/json")

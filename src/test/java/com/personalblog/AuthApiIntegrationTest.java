@@ -14,6 +14,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.personalblog.email.VerificationEmailSender;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -24,6 +29,7 @@ class AuthApiIntegrationTest {
         {"email":"Reader@Example.com","password":"a-secure-password","displayName":"Reader One"}
         """;
     @Autowired MockMvc mvc;
+    @MockitoBean VerificationEmailSender emailSender;
 
     @Test void exposesCsrfTokenAndAnonymousSessionState() throws Exception {
         mvc.perform(get("/api/v1/auth/csrf"))
@@ -71,5 +77,23 @@ class AuthApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"missing@example.com\",\"password\":\"wrong-password\"}"))
             .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+    }
+
+    @Test void verifiesEmailWithSingleUseTokenFromDeliveryLink() throws Exception {
+        mvc.perform(post("/api/v1/auth/register").with(csrf())
+            .contentType(MediaType.APPLICATION_JSON).content(REGISTER)).andExpect(status().isCreated());
+
+        ArgumentCaptor<String> url = ArgumentCaptor.forClass(String.class);
+        verify(emailSender).send(eq("reader@example.com"), eq("Reader One"), url.capture());
+        String token = url.getValue().substring(url.getValue().indexOf("token=") + 6);
+        String body = "{\"token\":\"" + token + "\"}";
+
+        mvc.perform(post("/api/v1/auth/verify-email").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.emailVerified").value(true));
+        mvc.perform(post("/api/v1/auth/verify-email").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content(body))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_VERIFICATION_TOKEN"));
     }
 }

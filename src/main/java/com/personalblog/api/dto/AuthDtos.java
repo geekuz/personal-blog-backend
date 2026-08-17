@@ -22,4 +22,5 @@ public final class AuthDtos {
     public record UserResponse(UUID id, String email, String displayName, boolean emailVerified, Set<UserRole> roles) {}
     public record SessionResponse(boolean authenticated, UserResponse user) {}
     public record CsrfResponse(String headerName, String token) {}
+    public record VerifyEmailRequest(@NotBlank @Size(max = 200) String token) {}
 }

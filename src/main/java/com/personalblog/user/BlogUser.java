@@ -43,4 +43,9 @@ public class BlogUser {
     public boolean isEnabled() { return enabled; }
     public boolean isEmailVerified() { return emailVerified; }
     public Set<UserRole> getRoles() { return Set.copyOf(roles); }
+
+    public void verifyEmail(Instant now) {
+        this.emailVerified = true;
+        this.updatedAt = now;
+    }
 }

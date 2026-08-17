@@ -4,6 +4,9 @@ import com.personalblog.post.PostNotFoundException;
 import com.personalblog.post.DuplicatePostSlugException;
 import com.personalblog.user.EmailAlreadyRegisteredException;
 import com.personalblog.user.InvalidCredentialsException;
+import com.personalblog.user.InvalidVerificationTokenException;
+import com.personalblog.user.VerificationRateLimitException;
+import com.personalblog.email.EmailDeliveryException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -42,6 +45,24 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     ResponseEntity<ApiError> invalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
         return error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Email or password is incorrect", request, null);
+    }
+
+    @ExceptionHandler(InvalidVerificationTokenException.class)
+    ResponseEntity<ApiError> invalidVerificationToken(InvalidVerificationTokenException ex, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_VERIFICATION_TOKEN",
+            "Verification link is invalid or expired", request, null);
+    }
+
+    @ExceptionHandler(VerificationRateLimitException.class)
+    ResponseEntity<ApiError> verificationRateLimit(VerificationRateLimitException ex, HttpServletRequest request) {
+        return error(HttpStatus.TOO_MANY_REQUESTS, "VERIFICATION_RATE_LIMIT",
+            "Please wait one minute before requesting another email", request, null);
+    }
+
+    @ExceptionHandler(EmailDeliveryException.class)
+    ResponseEntity<ApiError> emailDelivery(EmailDeliveryException ex, HttpServletRequest request) {
+        return error(HttpStatus.BAD_GATEWAY, "EMAIL_DELIVERY_FAILED",
+            "Verification email could not be sent", request, null);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

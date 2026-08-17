@@ -41,6 +41,9 @@ demo posts so production content can be managed exclusively through the admin AP
 | `BLOG_ADMIN_API_KEY` | _(empty; admin API disabled)_ | Secret required in `X-Admin-API-Key` for every admin request |
 | `SESSION_COOKIE_SECURE` | `false` | Set `true` in HTTPS production |
 | `SESSION_COOKIE_SAME_SITE` | `lax` | Set `none` while frontend and API use different sites |
+| `BLOG_FRONTEND_URL` | `http://localhost:5173` | Public frontend origin used in verification links |
+| `RESEND_API_KEY` | _(empty)_ | Secret Resend API key used for transactional email |
+| `BLOG_EMAIL_FROM` | `onboarding@resend.dev` | Verified Resend sender address |
 
 Production should supply every database setting from its secret/configuration system. Hibernate validates the Flyway-managed schema and never updates it. Timestamps are stored and serialized in UTC.
 
@@ -100,6 +103,21 @@ restarts. Public post endpoints remain anonymous.
 - `POST /api/v1/auth/login` starts a session.
 - `GET /api/v1/auth/me` returns the current session state.
 - `POST /api/v1/auth/logout` invalidates the session.
+- `POST /api/v1/auth/verify-email` consumes a single-use verification token.
+- `POST /api/v1/auth/verification/resend` sends a new link for the logged-in user.
+
+Verification tokens expire after 24 hours, are stored only as SHA-256 hashes,
+and can be requested at most once per minute. Configure Resend in production:
+
+```text
+BLOG_FRONTEND_URL=https://personal-blog-frontend-virid.vercel.app
+RESEND_API_KEY=re_...
+BLOG_EMAIL_FROM=onboarding@resend.dev
+```
+
+The Resend onboarding sender is suitable for initial testing with the Resend
+account owner's email. Verify a domain in Resend and replace `BLOG_EMAIL_FROM`
+before sending to general users.
 
 For the current Vercel/Render deployment, set these Render variables:
 
@@ -130,6 +148,7 @@ Migrations live in `src/main/resources/db/migration`:
 - `V3` imports the three original frontend posts and removes the placeholders.
 - `V4` removes the demo posts and their unused tags.
 - `V5` creates users, roles, and persistent Spring Session tables.
+- `V6` creates single-use email verification tokens.
 
 Never edit an applied production migration. Add a new versioned migration instead.
 
