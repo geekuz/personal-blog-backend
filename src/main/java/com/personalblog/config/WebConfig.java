@@ -13,6 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void setAllowedOrigins(List<String> allowedOrigins) { this.allowedOrigins = List.copyOf(allowedOrigins); }
     @Override public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/v1/**").allowedOrigins(allowedOrigins.toArray(String[]::new))
-            .allowedMethods("GET", "OPTIONS").allowedHeaders("*").allowCredentials(false).maxAge(3600);
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS").allowedHeaders("*")
+            .allowCredentials(true).maxAge(3600);
     }
 }

@@ -1,3 +1,7 @@
 delete from post_tags;
 delete from posts;
 delete from tags;
+delete from spring_session_attributes;
+delete from spring_session;
+delete from user_roles;
+delete from users;

@@ -16,6 +16,18 @@ spring:
   mvc:
     problemdetails:
       enabled: false
+  session:
+    timeout: 7d
+    jdbc:
+      initialize-schema: never
+server:
+  servlet:
+    session:
+      cookie:
+        name: BLOG_SESSION
+        http-only: true
+        secure: ${SESSION_COOKIE_SECURE:false}
+        same-site: ${SESSION_COOKIE_SAME_SITE:lax}
 blog:
   cors:
     allowed-origins: ${BLOG_ALLOWED_ORIGINS:http://localhost:5173}

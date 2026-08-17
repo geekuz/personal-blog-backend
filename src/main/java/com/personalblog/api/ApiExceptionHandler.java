@@ -2,6 +2,8 @@ package com.personalblog.api;
 
 import com.personalblog.post.PostNotFoundException;
 import com.personalblog.post.DuplicatePostSlugException;
+import com.personalblog.user.EmailAlreadyRegisteredException;
+import com.personalblog.user.InvalidCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -30,6 +32,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(DuplicatePostSlugException.class)
     ResponseEntity<ApiError> duplicateSlug(DuplicatePostSlugException ex, HttpServletRequest request) {
         return error(HttpStatus.CONFLICT, "POST_SLUG_EXISTS", ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    ResponseEntity<ApiError> duplicateEmail(EmailAlreadyRegisteredException ex, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, "EMAIL_ALREADY_REGISTERED", "An account already exists for this email", request, null);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    ResponseEntity<ApiError> invalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
+        return error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Email or password is incorrect", request, null);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

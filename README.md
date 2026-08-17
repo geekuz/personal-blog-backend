@@ -39,6 +39,8 @@ demo posts so production content can be managed exclusively through the admin AP
 | `DATABASE_PASSWORD` | `blog` | Database password |
 | `BLOG_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated exact CORS origins |
 | `BLOG_ADMIN_API_KEY` | _(empty; admin API disabled)_ | Secret required in `X-Admin-API-Key` for every admin request |
+| `SESSION_COOKIE_SECURE` | `false` | Set `true` in HTTPS production |
+| `SESSION_COOKIE_SAME_SITE` | `lax` | Set `none` while frontend and API use different sites |
 
 Production should supply every database setting from its secret/configuration system. Hibernate validates the Flyway-managed schema and never updates it. Timestamps are stored and serialized in UTC.
 
@@ -87,6 +89,29 @@ Use `"status": "DRAFT"` to keep a post out of all public endpoints. Slugs must
 be lowercase kebab-case. `publishedAt` accepts an optional ISO-8601 UTC timestamp,
 for example `2026-08-17T07:00:00Z`.
 
+## User accounts
+
+Authentication uses Spring Security, BCrypt password hashing, CSRF protection,
+an HTTP-only session cookie, and JDBC-backed sessions that survive application
+restarts. Public post endpoints remain anonymous.
+
+- `GET /api/v1/auth/csrf` returns the CSRF header name and token.
+- `POST /api/v1/auth/register` creates a `USER` account.
+- `POST /api/v1/auth/login` starts a session.
+- `GET /api/v1/auth/me` returns the current session state.
+- `POST /api/v1/auth/logout` invalidates the session.
+
+For the current Vercel/Render deployment, set these Render variables:
+
+```text
+SESSION_COOKIE_SECURE=true
+SESSION_COOKIE_SAME_SITE=none
+```
+
+The frontend sends credentials explicitly. Moving the frontend and API onto
+subdomains of one custom domain is recommended before relying on authentication
+for a broad audience, because some browsers restrict third-party cookies.
+
 ## Tests and build
 
 ```bash
@@ -104,6 +129,7 @@ Migrations live in `src/main/resources/db/migration`:
 - `V2` inserts the initial representative seed data.
 - `V3` imports the three original frontend posts and removes the placeholders.
 - `V4` removes the demo posts and their unused tags.
+- `V5` creates users, roles, and persistent Spring Session tables.
 
 Never edit an applied production migration. Add a new versioned migration instead.
 
