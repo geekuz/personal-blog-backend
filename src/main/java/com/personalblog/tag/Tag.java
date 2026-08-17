@@ -11,6 +11,7 @@ public class Tag {
     @Column(nullable = false, unique = true, length = 50) private String slug;
 
     protected Tag() {}
+    public Tag(String name, String slug) { this.name = name; this.slug = slug; }
     public UUID getId() { return id; }
     public String getName() { return name; }
     public String getSlug() { return slug; }

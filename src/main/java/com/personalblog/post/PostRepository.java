@@ -28,4 +28,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @EntityGraph(attributePaths = "tags")
     Optional<Post> findBySlugAndStatus(String slug, PostStatus status);
+
+    @EntityGraph(attributePaths = "tags")
+    Optional<Post> findBySlug(String slug);
+
+    boolean existsBySlug(String slug);
 }

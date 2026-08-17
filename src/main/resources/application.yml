@@ -19,6 +19,8 @@ spring:
 blog:
   cors:
     allowed-origins: ${BLOG_ALLOWED_ORIGINS:http://localhost:5173}
+  admin:
+    api-key: ${BLOG_ADMIN_API_KEY:}
 management:
   endpoints:
     web:

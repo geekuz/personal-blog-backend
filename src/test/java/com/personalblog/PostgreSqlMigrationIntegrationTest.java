@@ -19,8 +19,8 @@ class PostgreSqlMigrationIntegrationTest {
 
     @Autowired JdbcTemplate jdbc;
 
-    @Test void flywayBuildsPostgresFromZeroAndSeedsThreePosts() {
+    @Test void flywayBuildsPostgresFromZeroWithoutDemoPosts() {
         Integer count = jdbc.queryForObject("select count(*) from posts where status = 'PUBLISHED'", Integer.class);
-        assertThat(count).isEqualTo(3);
+        assertThat(count).isZero();
     }
 }

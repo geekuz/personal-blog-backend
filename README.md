@@ -1,6 +1,6 @@
 # Personal Blog Backend
 
-Read-only Spring Boot API implementing [`BACKEND_HANDOFF.md`](BACKEND_HANDOFF.md). It exposes published Markdown posts and their tags; drafts are never returned by public queries.
+Spring Boot API implementing [`BACKEND_HANDOFF.md`](BACKEND_HANDOFF.md). It exposes published Markdown posts and their tags through public read endpoints. Protected admin endpoints create, inspect, update, and delete both draft and published posts.
 
 ## Requirements
 
@@ -27,7 +27,8 @@ curl 'http://localhost:8080/api/v1/tags'
 
 Flyway creates the schema and inserts the three original frontend posts. `V2`
 provides the initial seed and `V3` replaces its representative content with the
-preserved frontend Markdown through a forward-only migration.
+preserved frontend Markdown through a forward-only migration. `V4` removes those
+demo posts so production content can be managed exclusively through the admin API.
 
 ## Configuration
 
@@ -37,6 +38,7 @@ preserved frontend Markdown through a forward-only migration.
 | `DATABASE_USERNAME` | `blog` | Database user |
 | `DATABASE_PASSWORD` | `blog` | Database password |
 | `BLOG_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated exact CORS origins |
+| `BLOG_ADMIN_API_KEY` | _(empty; admin API disabled)_ | Secret required in `X-Admin-API-Key` for every admin request |
 
 Production should supply every database setting from its secret/configuration system. Hibernate validates the Flyway-managed schema and never updates it. Timestamps are stored and serialized in UTC.
 
@@ -45,6 +47,45 @@ The frontend should use:
 ```text
 VITE_API_BASE_URL=http://localhost:8080/api/v1
 ```
+
+## Manage posts through the admin API
+
+Generate a strong key and store it as `BLOG_ADMIN_API_KEY` in Render. Never put
+the key in Git or in a frontend environment variable:
+
+```bash
+openssl rand -hex 32
+```
+
+Create a published post (omit `publishedAt` to publish it immediately):
+
+```bash
+curl -X POST 'https://personal-blog-backend-idiq.onrender.com/api/v1/admin/posts' \
+  -H 'Content-Type: application/json' \
+  -H 'X-Admin-API-Key: YOUR_SECRET_KEY' \
+  --data '{
+    "slug": "my-first-real-post",
+    "title": "My First Real Post",
+    "summary": "A short description shown on the homepage.",
+    "content": "# Hello\n\nWrite the full post here in **Markdown**.",
+    "status": "PUBLISHED",
+    "tags": [
+      {"name": "Java", "slug": "java"},
+      {"name": "Learning", "slug": "learning"}
+    ]
+  }'
+```
+
+Admin endpoints:
+
+- `POST /api/v1/admin/posts` creates a post.
+- `GET /api/v1/admin/posts/{slug}` returns a draft or published post.
+- `PUT /api/v1/admin/posts/{slug}` replaces a post using the same JSON shape.
+- `DELETE /api/v1/admin/posts/{slug}` permanently deletes a post.
+
+Use `"status": "DRAFT"` to keep a post out of all public endpoints. Slugs must
+be lowercase kebab-case. `publishedAt` accepts an optional ISO-8601 UTC timestamp,
+for example `2026-08-17T07:00:00Z`.
 
 ## Tests and build
 
@@ -62,6 +103,7 @@ Migrations live in `src/main/resources/db/migration`:
 - `V1` creates posts, tags, the many-to-many join table, constraints, and indexes.
 - `V2` inserts the initial representative seed data.
 - `V3` imports the three original frontend posts and removes the placeholders.
+- `V4` removes the demo posts and their unused tags.
 
 Never edit an applied production migration. Add a new versioned migration instead.
 
@@ -74,7 +116,9 @@ docker run --rm -p 8080:8080 \
   -e DATABASE_URL='jdbc:postgresql://db:5432/personal_blog' \
   -e DATABASE_USERNAME='...' -e DATABASE_PASSWORD='...' \
   -e BLOG_ALLOWED_ORIGINS='https://blog.example.com' \
+  -e BLOG_ADMIN_API_KEY='...' \
   personal-blog-backend
 ```
 
-Only Actuator health is exposed, without details. Admin authentication and write endpoints remain phase 2 as required by the handoff.
+Only Actuator health is exposed, without details. Admin writes are denied when
+`BLOG_ADMIN_API_KEY` is empty and use constant-time key comparison when enabled.

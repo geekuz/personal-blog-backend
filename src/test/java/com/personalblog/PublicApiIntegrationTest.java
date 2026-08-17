@@ -13,10 +13,16 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Sql(scripts = {
+    "classpath:reset-blog-data.sql",
+    "classpath:db/migration/V2__seed_public_posts.sql",
+    "classpath:db/migration/V3__import_original_frontend_posts.sql"
+}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class PublicApiIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired JdbcTemplate jdbc;

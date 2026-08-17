@@ -25,6 +25,31 @@ public class Post {
     private Set<Tag> tags = new LinkedHashSet<>();
 
     protected Post() {}
+    public Post(String slug, String title, String summary, String content, PostStatus status,
+                Instant publishedAt, Instant now, Set<Tag> tags) {
+        this.slug = slug;
+        this.title = title;
+        this.summary = summary;
+        this.content = content;
+        this.status = status;
+        this.publishedAt = publishedAt;
+        this.createdAt = now;
+        this.updatedAt = now;
+        this.tags = new LinkedHashSet<>(tags);
+    }
+
+    public void update(String slug, String title, String summary, String content, PostStatus status,
+                       Instant publishedAt, Instant now, Set<Tag> tags) {
+        this.slug = slug;
+        this.title = title;
+        this.summary = summary;
+        this.content = content;
+        this.status = status;
+        this.publishedAt = publishedAt;
+        this.updatedAt = now;
+        this.tags.clear();
+        this.tags.addAll(tags);
+    }
     public UUID getId() { return id; }
     public String getSlug() { return slug; }
     public String getTitle() { return title; }
