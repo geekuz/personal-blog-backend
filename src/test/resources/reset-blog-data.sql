@@ -4,5 +4,6 @@ delete from tags;
 delete from spring_session_attributes;
 delete from spring_session;
 delete from user_roles;
+delete from password_reset_tokens;
 delete from email_verification_tokens;
 delete from users;

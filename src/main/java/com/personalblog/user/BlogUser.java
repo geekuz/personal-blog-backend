@@ -48,4 +48,9 @@ public class BlogUser {
         this.emailVerified = true;
         this.updatedAt = now;
     }
+
+    public void changePassword(String newPasswordHash, Instant now) {
+        this.passwordHash = newPasswordHash;
+        this.updatedAt = now;
+    }
 }

@@ -22,5 +22,7 @@ class PostgreSqlMigrationIntegrationTest {
     @Test void flywayBuildsPostgresFromZeroWithoutDemoPosts() {
         Integer count = jdbc.queryForObject("select count(*) from posts where status = 'PUBLISHED'", Integer.class);
         assertThat(count).isZero();
+        Integer resetTable = jdbc.queryForObject("select count(*) from password_reset_tokens", Integer.class);
+        assertThat(resetTable).isZero();
     }
 }

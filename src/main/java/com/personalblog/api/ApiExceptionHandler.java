@@ -6,7 +6,10 @@ import com.personalblog.user.EmailAlreadyRegisteredException;
 import com.personalblog.user.InvalidCredentialsException;
 import com.personalblog.user.InvalidVerificationTokenException;
 import com.personalblog.user.VerificationRateLimitException;
+import com.personalblog.user.IncorrectCurrentPasswordException;
+import com.personalblog.user.InvalidPasswordResetTokenException;
 import com.personalblog.email.EmailDeliveryException;
+import com.personalblog.config.AuthRateLimitException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -57,6 +60,29 @@ public class ApiExceptionHandler {
     ResponseEntity<ApiError> verificationRateLimit(VerificationRateLimitException ex, HttpServletRequest request) {
         return error(HttpStatus.TOO_MANY_REQUESTS, "VERIFICATION_RATE_LIMIT",
             "Please wait one minute before requesting another email", request, null);
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    ResponseEntity<ApiError> invalidPasswordResetToken(InvalidPasswordResetTokenException ex,
+                                                        HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_PASSWORD_RESET_TOKEN",
+            "Password reset link is invalid or expired", request, null);
+    }
+
+    @ExceptionHandler(IncorrectCurrentPasswordException.class)
+    ResponseEntity<ApiError> incorrectCurrentPassword(IncorrectCurrentPasswordException ex,
+                                                       HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INCORRECT_CURRENT_PASSWORD",
+            "Current password is incorrect", request, null);
+    }
+
+    @ExceptionHandler(AuthRateLimitException.class)
+    ResponseEntity<ApiError> authRateLimit(AuthRateLimitException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .header("Retry-After", Long.toString(ex.getRetryAfterSeconds()))
+            .body(new ApiError(Instant.now(), HttpStatus.TOO_MANY_REQUESTS.value(),
+                "AUTH_RATE_LIMIT", "Too many requests. Please try again later.",
+                request.getRequestURI(), null, null));
     }
 
     @ExceptionHandler(EmailDeliveryException.class)

@@ -21,6 +21,7 @@ spring:
     jdbc:
       initialize-schema: never
 server:
+  forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:native}
   servlet:
     session:
       cookie:

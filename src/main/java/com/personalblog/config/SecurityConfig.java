@@ -28,7 +28,8 @@ public class SecurityConfig {
             .csrf(config -> config.csrfTokenRepository(csrf)
                 .ignoringRequestMatchers("/api/v1/admin/**"))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/verification/resend").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/verification/resend",
+                    "/api/v1/auth/password/change").authenticated()
                 .anyRequest().permitAll())
             .logout(logout -> logout.logoutUrl("/api/v1/auth/logout")
                 .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_NO_CONTENT))
