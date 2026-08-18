@@ -105,9 +105,19 @@ restarts. Public post endpoints remain anonymous.
 - `POST /api/v1/auth/logout` invalidates the session.
 - `POST /api/v1/auth/verify-email` consumes a single-use verification token.
 - `POST /api/v1/auth/verification/resend` sends a new link for the logged-in user.
+- `POST /api/v1/auth/password/forgot` sends a reset link without revealing whether the account exists.
+- `POST /api/v1/auth/password/reset` consumes a reset token and signs out every existing session.
+- `POST /api/v1/auth/password/change` changes the logged-in user's password and signs out every session.
 
 Verification tokens expire after 24 hours, are stored only as SHA-256 hashes,
-and can be requested at most once per minute. Configure Resend in production:
+and can be requested at most once per minute.
+
+Password reset tokens expire after 30 minutes, are single-use, and are also
+stored only as SHA-256 hashes. Registration, login, verification, recovery, and
+password changes are rate-limited per client address; throttled responses use
+HTTP 429 with a `Retry-After` header.
+
+Configure Resend in production:
 
 ```text
 BLOG_FRONTEND_URL=https://personal-blog-frontend-virid.vercel.app
