@@ -1,7 +1,7 @@
 package com.personalblog.tag;
 
-import com.personalblog.api.dto.TagResponses.TagItem;
-import com.personalblog.api.dto.TagResponses.TagList;
+import com.personalblog.api.dto.TagItem;
+import com.personalblog.api.dto.TagListResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class TagService {
     private final TagRepository tags;
     public TagService(TagRepository tags) { this.tags = tags; }
-    public TagList list() {
-        return new TagList(tags.findPublishedTagCounts().stream()
+    public TagListResponse list() {
+        return new TagListResponse(tags.findPublishedTagCounts().stream()
             .map(t -> new TagItem(t.getName(), t.getSlug(), t.getPostCount())).toList());
     }
 }

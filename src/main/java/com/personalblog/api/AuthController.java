@@ -1,14 +1,22 @@
 package com.personalblog.api;
 
-import com.personalblog.api.dto.AuthDtos.*;
-import com.personalblog.user.*;
+import com.personalblog.api.dto.CsrfResponse;
+import com.personalblog.api.dto.LoginRequest;
+import com.personalblog.api.dto.RegisterRequest;
+import com.personalblog.api.dto.SessionResponse;
+import com.personalblog.api.dto.UserResponse;
+import com.personalblog.api.dto.VerifyEmailRequest;
+import com.personalblog.email.EmailDeliveryException;
+import com.personalblog.user.BlogUser;
+import com.personalblog.user.BlogUserService;
+import com.personalblog.user.EmailVerificationService;
+import com.personalblog.user.InvalidCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.personalblog.email.EmailDeliveryException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

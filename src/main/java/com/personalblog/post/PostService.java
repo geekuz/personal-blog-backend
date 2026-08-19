@@ -1,6 +1,8 @@
 package com.personalblog.post;
 
-import com.personalblog.api.dto.*;
+import com.personalblog.api.dto.PostDetailResponse;
+import com.personalblog.api.dto.PostPageResponse;
+import com.personalblog.api.dto.PostSummaryResponse;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

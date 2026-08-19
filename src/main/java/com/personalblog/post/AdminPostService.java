@@ -1,8 +1,8 @@
 package com.personalblog.post;
 
-import com.personalblog.api.dto.AdminPostDtos.AdminPostResponse;
-import com.personalblog.api.dto.AdminPostDtos.PostWriteRequest;
-import com.personalblog.api.dto.AdminPostDtos.TagInput;
+import com.personalblog.api.dto.AdminPostResponse;
+import com.personalblog.api.dto.PostWriteRequest;
+import com.personalblog.api.dto.TagInput;
 import com.personalblog.tag.Tag;
 import com.personalblog.tag.TagRepository;
 import java.time.Instant;
