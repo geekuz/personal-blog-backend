@@ -14,6 +14,6 @@ public class AuthRateLimitConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(interceptor).addPathPatterns("/api/v1/auth/**");
+        registry.addInterceptor(interceptor).addPathPatterns("/api/v1/auth/**", "/api/v1/posts/*/comments");
     }
 }

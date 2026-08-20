@@ -11,6 +11,10 @@ import com.personalblog.user.InvalidPasswordResetTokenException;
 import com.personalblog.email.EmailDeliveryException;
 import com.personalblog.config.AuthRateLimitException;
 import com.personalblog.newsletter.EmailVerificationRequiredException;
+import com.personalblog.comment.CommentForbiddenException;
+import com.personalblog.comment.CommentNotFoundException;
+import com.personalblog.comment.CommentRateLimitException;
+import com.personalblog.comment.CommentEmailVerificationRequiredException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -97,6 +101,33 @@ public class ApiExceptionHandler {
                                                         HttpServletRequest request) {
         return error(HttpStatus.FORBIDDEN, "EMAIL_VERIFICATION_REQUIRED",
             "Verify your email before subscribing to the newsletter", request, null);
+    }
+
+    @ExceptionHandler(CommentNotFoundException.class)
+    ResponseEntity<ApiError> commentNotFound(CommentNotFoundException ex, HttpServletRequest request) {
+        return error(HttpStatus.NOT_FOUND, "COMMENT_NOT_FOUND", "Comment not found", request, null);
+    }
+
+    @ExceptionHandler(CommentEmailVerificationRequiredException.class)
+    ResponseEntity<ApiError> commentEmailVerificationRequired(CommentEmailVerificationRequiredException ex,
+                                                               HttpServletRequest request) {
+        return error(HttpStatus.FORBIDDEN, "EMAIL_VERIFICATION_REQUIRED",
+            "Verify your email before commenting", request, null);
+    }
+
+    @ExceptionHandler(CommentForbiddenException.class)
+    ResponseEntity<ApiError> commentForbidden(CommentForbiddenException ex, HttpServletRequest request) {
+        return error(HttpStatus.FORBIDDEN, "COMMENT_DELETE_FORBIDDEN",
+            "You cannot delete this comment", request, null);
+    }
+
+    @ExceptionHandler(CommentRateLimitException.class)
+    ResponseEntity<ApiError> commentRateLimit(CommentRateLimitException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .header("Retry-After", Long.toString(ex.getRetryAfterSeconds()))
+            .body(new ApiError(Instant.now(), HttpStatus.TOO_MANY_REQUESTS.value(),
+                "COMMENT_RATE_LIMIT", "Too many comments. Please try again later.",
+                request.getRequestURI(), null, null));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

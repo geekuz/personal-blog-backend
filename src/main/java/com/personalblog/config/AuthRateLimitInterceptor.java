@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import com.personalblog.comment.CommentRateLimitException;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -34,17 +35,26 @@ public class AuthRateLimitInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!HttpMethod.POST.matches(request.getMethod())) return true;
-        Limit limit = LIMITS.get(request.getRequestURI());
+        boolean commentCreation = request.getRequestURI().matches("/api/v1/posts/[^/]+/comments");
+        Limit limit = commentCreation
+            ? new Limit(10, Duration.ofMinutes(1))
+            : LIMITS.get(request.getRequestURI());
         if (limit == null) return true;
 
-        String key = request.getRequestURI() + ':' + request.getRemoteAddr();
+        String discriminator = commentCreation && request.getUserPrincipal() != null
+            ? request.getUserPrincipal().getName()
+            : request.getRemoteAddr();
+        String operation = commentCreation ? "/api/v1/comments:create" : request.getRequestURI();
+        String key = operation + ':' + discriminator;
         Bucket bucket = buckets.get(key, ignored -> Bucket.builder()
             .addLimit(Bandwidth.builder().capacity(limit.capacity())
                 .refillIntervally(limit.capacity(), limit.period()).build())
             .build());
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
         if (!probe.isConsumed()) {
-            throw new AuthRateLimitException(TimeUnit.NANOSECONDS.toSeconds(probe.getNanosToWaitForRefill()) + 1);
+            long retryAfter = TimeUnit.NANOSECONDS.toSeconds(probe.getNanosToWaitForRefill()) + 1;
+            if (commentCreation) throw new CommentRateLimitException(retryAfter);
+            throw new AuthRateLimitException(retryAfter);
         }
         return true;
     }

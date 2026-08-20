@@ -31,6 +31,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/verification/resend",
                     "/api/v1/auth/password/change").authenticated()
                 .requestMatchers("/api/v1/newsletter/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/posts/*/comments").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/comments/*").authenticated()
                 .anyRequest().permitAll())
             .logout(logout -> logout.logoutUrl("/api/v1/auth/logout")
                 .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_NO_CONTENT))
