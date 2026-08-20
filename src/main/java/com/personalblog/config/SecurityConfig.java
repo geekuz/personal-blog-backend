@@ -30,6 +30,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/verification/resend",
                     "/api/v1/auth/password/change").authenticated()
+                .requestMatchers("/api/v1/newsletter/**").authenticated()
                 .anyRequest().permitAll())
             .logout(logout -> logout.logoutUrl("/api/v1/auth/logout")
                 .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_NO_CONTENT))

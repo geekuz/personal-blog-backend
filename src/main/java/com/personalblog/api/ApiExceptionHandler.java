@@ -10,6 +10,7 @@ import com.personalblog.user.IncorrectCurrentPasswordException;
 import com.personalblog.user.InvalidPasswordResetTokenException;
 import com.personalblog.email.EmailDeliveryException;
 import com.personalblog.config.AuthRateLimitException;
+import com.personalblog.newsletter.EmailVerificationRequiredException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -89,6 +90,13 @@ public class ApiExceptionHandler {
     ResponseEntity<ApiError> emailDelivery(EmailDeliveryException ex, HttpServletRequest request) {
         return error(HttpStatus.BAD_GATEWAY, "EMAIL_DELIVERY_FAILED",
             "Verification email could not be sent", request, null);
+    }
+
+    @ExceptionHandler(EmailVerificationRequiredException.class)
+    ResponseEntity<ApiError> emailVerificationRequired(EmailVerificationRequiredException ex,
+                                                        HttpServletRequest request) {
+        return error(HttpStatus.FORBIDDEN, "EMAIL_VERIFICATION_REQUIRED",
+            "Verify your email before subscribing to the newsletter", request, null);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
