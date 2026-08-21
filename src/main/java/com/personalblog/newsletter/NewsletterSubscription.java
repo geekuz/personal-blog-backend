@@ -33,4 +33,7 @@ public class NewsletterSubscription {
         this.user = user;
         this.subscribedAt = subscribedAt;
     }
+
+    public UUID getId() { return id; }
+    public BlogUser getUser() { return user; }
 }

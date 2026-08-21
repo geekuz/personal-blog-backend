@@ -39,6 +39,7 @@ demo posts so production content can be managed exclusively through the admin AP
 | `DATABASE_PASSWORD` | `blog` | Database password |
 | `BLOG_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated exact CORS origins |
 | `BLOG_ADMIN_API_KEY` | _(empty; admin API disabled)_ | Secret required in `X-Admin-API-Key` for every admin request |
+| `BLOG_ADMIN_EMAIL` | _(empty; dashboard disabled)_ | Existing account email that receives the `ADMIN` role at startup |
 | `SESSION_COOKIE_SECURE` | `false` | Set `true` in HTTPS production |
 | `SESSION_COOKIE_SAME_SITE` | `lax` | Set `none` while frontend and API use different sites |
 | `BLOG_FRONTEND_URL` | `http://localhost:5173` | Public frontend origin used in verification links |

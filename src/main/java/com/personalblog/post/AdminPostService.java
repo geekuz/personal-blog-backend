@@ -5,6 +5,7 @@ import com.personalblog.api.dto.PostWriteRequest;
 import com.personalblog.api.dto.TagInput;
 import com.personalblog.tag.Tag;
 import com.personalblog.tag.TagRepository;
+import com.personalblog.newsletter.NewsletterDeliveryService;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,10 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminPostService {
     private final PostRepository posts;
     private final TagRepository tags;
+    private final NewsletterDeliveryService newsletter;
 
-    public AdminPostService(PostRepository posts, TagRepository tags) {
+    public AdminPostService(PostRepository posts, TagRepository tags, NewsletterDeliveryService newsletter) {
         this.posts = posts;
         this.tags = tags;
+        this.newsletter = newsletter;
     }
 
     public AdminPostResponse create(PostWriteRequest request) {
@@ -29,11 +32,14 @@ public class AdminPostService {
         Instant now = Instant.now();
         Post post = new Post(slug, request.title().trim(), request.summary().trim(), request.content(),
             request.status(), publishedAt(request, now), now, resolveTags(request.tags()));
-        return response(posts.save(post));
+        Post saved = posts.save(post);
+        if (saved.getStatus() == PostStatus.PUBLISHED) newsletter.enqueue(saved);
+        return response(saved);
     }
 
     public AdminPostResponse update(String currentSlug, PostWriteRequest request) {
         Post post = find(currentSlug);
+        boolean newlyPublished = post.getStatus() != PostStatus.PUBLISHED && request.status() == PostStatus.PUBLISHED;
         String nextSlug = request.slug().trim();
         if (!post.getSlug().equals(nextSlug) && posts.existsBySlug(nextSlug)) {
             throw new DuplicatePostSlugException(nextSlug);
@@ -41,6 +47,7 @@ public class AdminPostService {
         Instant now = Instant.now();
         post.update(nextSlug, request.title().trim(), request.summary().trim(), request.content(),
             request.status(), publishedAt(request, now), now, resolveTags(request.tags()));
+        if (newlyPublished) newsletter.enqueue(post);
         return response(post);
     }
 

@@ -28,5 +28,7 @@ class PostgreSqlMigrationIntegrationTest {
         assertThat(subscriptions).isZero();
         Integer comments = jdbc.queryForObject("select count(*) from post_comments", Integer.class);
         assertThat(comments).isZero();
+        Integer deliveries = jdbc.queryForObject("select count(*) from newsletter_deliveries", Integer.class);
+        assertThat(deliveries).isZero();
     }
 }

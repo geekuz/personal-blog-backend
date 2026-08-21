@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
     @Query(value = """
@@ -33,4 +34,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     Optional<Post> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
+    long countByStatus(PostStatus status);
+    @EntityGraph(attributePaths = "tags")
+    List<Post> findAllByOrderByUpdatedAtDesc();
 }

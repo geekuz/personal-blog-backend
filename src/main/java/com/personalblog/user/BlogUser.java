@@ -53,4 +53,8 @@ public class BlogUser {
         this.passwordHash = newPasswordHash;
         this.updatedAt = now;
     }
+
+    public void grantRole(UserRole role, Instant now) {
+        if (roles.add(role)) updatedAt = now;
+    }
 }

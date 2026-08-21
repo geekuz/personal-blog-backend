@@ -34,10 +34,13 @@ blog:
     allowed-origins: ${BLOG_ALLOWED_ORIGINS:http://localhost:5173}
   admin:
     api-key: ${BLOG_ADMIN_API_KEY:}
+    email: ${BLOG_ADMIN_EMAIL:}
   frontend-url: ${BLOG_FRONTEND_URL:http://localhost:5173}
   email:
     resend-api-key: ${RESEND_API_KEY:}
     from: ${BLOG_EMAIL_FROM:onboarding@resend.dev}
+  newsletter:
+    dispatch-delay-ms: ${BLOG_NEWSLETTER_DISPATCH_DELAY_MS:15000}
 management:
   endpoints:
     web:

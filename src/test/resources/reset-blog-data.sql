@@ -1,5 +1,6 @@
 delete from post_tags;
 delete from post_comments;
+delete from newsletter_deliveries;
 delete from posts;
 delete from tags;
 delete from spring_session_attributes;
