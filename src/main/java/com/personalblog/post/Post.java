@@ -15,6 +15,8 @@ public class Post {
     @Column(nullable = false, length = 200) private String title;
     @Column(nullable = false, length = 500) private String summary;
     @Column(nullable = false, columnDefinition = "text") private String content;
+    @Column(length = 2048) private String coverImageUrl;
+    @Column(length = 300) private String coverImageAlt;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 16) private PostStatus status;
     private Instant publishedAt;
     @Column(nullable = false, updatable = false) private Instant createdAt;
@@ -25,12 +27,15 @@ public class Post {
     private Set<Tag> tags = new LinkedHashSet<>();
 
     protected Post() {}
-    public Post(String slug, String title, String summary, String content, PostStatus status,
+    public Post(String slug, String title, String summary, String content, String coverImageUrl,
+                String coverImageAlt, PostStatus status,
                 Instant publishedAt, Instant now, Set<Tag> tags) {
         this.slug = slug;
         this.title = title;
         this.summary = summary;
         this.content = content;
+        this.coverImageUrl = coverImageUrl;
+        this.coverImageAlt = coverImageAlt;
         this.status = status;
         this.publishedAt = publishedAt;
         this.createdAt = now;
@@ -38,12 +43,15 @@ public class Post {
         this.tags = new LinkedHashSet<>(tags);
     }
 
-    public void update(String slug, String title, String summary, String content, PostStatus status,
+    public void update(String slug, String title, String summary, String content, String coverImageUrl,
+                       String coverImageAlt, PostStatus status,
                        Instant publishedAt, Instant now, Set<Tag> tags) {
         this.slug = slug;
         this.title = title;
         this.summary = summary;
         this.content = content;
+        this.coverImageUrl = coverImageUrl;
+        this.coverImageAlt = coverImageAlt;
         this.status = status;
         this.publishedAt = publishedAt;
         this.updatedAt = now;
@@ -55,6 +63,8 @@ public class Post {
     public String getTitle() { return title; }
     public String getSummary() { return summary; }
     public String getContent() { return content; }
+    public String getCoverImageUrl() { return coverImageUrl; }
+    public String getCoverImageAlt() { return coverImageAlt; }
     public PostStatus getStatus() { return status; }
     public Instant getPublishedAt() { return publishedAt; }
     public Instant getCreatedAt() { return createdAt; }

@@ -74,6 +74,8 @@ curl -X POST 'https://personal-blog-backend-idiq.onrender.com/api/v1/admin/posts
     "title": "My First Real Post",
     "summary": "A short description shown on the homepage.",
     "content": "# Hello\n\nWrite the full post here in **Markdown**.",
+    "coverImageUrl": "https://images.example.com/my-first-post.jpg",
+    "coverImageAlt": "Laptop displaying the finished blog post",
     "status": "PUBLISHED",
     "tags": [
       {"name": "Java", "slug": "java"},
@@ -91,7 +93,8 @@ Admin endpoints:
 
 Use `"status": "DRAFT"` to keep a post out of all public endpoints. Slugs must
 be lowercase kebab-case. `publishedAt` accepts an optional ISO-8601 UTC timestamp,
-for example `2026-08-17T07:00:00Z`.
+for example `2026-08-17T07:00:00Z`. Cover images are optional; when used,
+`coverImageUrl` and descriptive `coverImageAlt` must be provided together.
 
 ## User accounts
 

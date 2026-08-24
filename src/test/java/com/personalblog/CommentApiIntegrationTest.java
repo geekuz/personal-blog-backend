@@ -44,7 +44,7 @@ class CommentApiIntegrationTest {
     @BeforeEach void createPublishedPost() {
         rateLimits.clear();
         Instant now = Instant.now();
-        posts.save(new Post("commented-post", "Commented post", "Summary", "Body",
+        posts.save(new Post("commented-post", "Commented post", "Summary", "Body", null, null,
             PostStatus.PUBLISHED, now, now, Set.of()));
     }
 

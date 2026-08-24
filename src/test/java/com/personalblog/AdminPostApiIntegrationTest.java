@@ -24,6 +24,8 @@ class AdminPostApiIntegrationTest {
           "title": "Created through the API",
           "summary": "A post managed through the protected admin endpoint.",
           "content": "# Hello\\n\\nThis content came from the API.",
+          "coverImageUrl": "https://images.example.com/cover.jpg",
+          "coverImageAlt": "Abstract API illustration",
           "status": "PUBLISHED",
           "tags": [{"name": "API", "slug": "api"}]
         }
@@ -42,11 +44,13 @@ class AdminPostApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON).content(POST))
             .andExpect(status().isCreated())
             .andExpect(header().string("Location", "/api/v1/admin/posts/api-created-post"))
+            .andExpect(jsonPath("$.coverImageUrl").value("https://images.example.com/cover.jpg"))
             .andExpect(jsonPath("$.status").value("PUBLISHED"));
 
         mvc.perform(get("/api/v1/posts/api-created-post"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.title").value("Created through the API"));
+            .andExpect(jsonPath("$.title").value("Created through the API"))
+            .andExpect(jsonPath("$.coverImageAlt").value("Abstract API illustration"));
 
         String draft = POST.replace("\"status\": \"PUBLISHED\"", "\"status\": \"DRAFT\"");
         mvc.perform(put("/api/v1/admin/posts/api-created-post").header("X-Admin-API-Key", KEY)
@@ -61,5 +65,13 @@ class AdminPostApiIntegrationTest {
             .andExpect(status().isNoContent());
         mvc.perform(get("/api/v1/admin/posts/api-created-post").header("X-Admin-API-Key", KEY))
             .andExpect(status().isNotFound());
+    }
+
+    @Test void rejectsCoverImageWithoutAltText() throws Exception {
+        String invalid = POST.replace("\"coverImageAlt\": \"Abstract API illustration\",", "");
+        mvc.perform(post("/api/v1/admin/posts").header("X-Admin-API-Key", KEY)
+                .contentType(MediaType.APPLICATION_JSON).content(invalid))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 }

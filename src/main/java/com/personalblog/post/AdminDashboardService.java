@@ -33,6 +33,7 @@ public class AdminDashboardService {
     private AdminPostResponse response(Post post) {
         List<TagInput> tags = post.getTags().stream().map(tag -> new TagInput(tag.getName(), tag.getSlug())).toList();
         return new AdminPostResponse(post.getId(), post.getSlug(), post.getTitle(), post.getSummary(),
-            post.getContent(), post.getStatus(), post.getPublishedAt(), post.getCreatedAt(), post.getUpdatedAt(), tags);
+            post.getContent(), post.getCoverImageUrl(), post.getCoverImageAlt(), post.getStatus(),
+            post.getPublishedAt(), post.getCreatedAt(), post.getUpdatedAt(), tags);
     }
 }

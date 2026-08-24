@@ -30,5 +30,10 @@ class PostgreSqlMigrationIntegrationTest {
         assertThat(comments).isZero();
         Integer deliveries = jdbc.queryForObject("select count(*) from newsletter_deliveries", Integer.class);
         assertThat(deliveries).isZero();
+        Integer coverColumns = jdbc.queryForObject("""
+            select count(*) from information_schema.columns
+            where table_name = 'posts' and column_name in ('cover_image_url', 'cover_image_alt')
+            """, Integer.class);
+        assertThat(coverColumns).isEqualTo(2);
     }
 }

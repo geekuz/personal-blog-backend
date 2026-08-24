@@ -11,6 +11,8 @@ public record AdminPostResponse(
     String title,
     String summary,
     String content,
+    String coverImageUrl,
+    String coverImageAlt,
     PostStatus status,
     Instant publishedAt,
     Instant createdAt,

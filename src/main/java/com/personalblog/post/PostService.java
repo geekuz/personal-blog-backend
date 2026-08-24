@@ -30,12 +30,14 @@ public class PostService {
     public PostDetailResponse get(String slug) {
         Post p = posts.findBySlugAndStatus(slug.toLowerCase(), PostStatus.PUBLISHED)
             .orElseThrow(() -> new PostNotFoundException(slug));
-        return new PostDetailResponse(p.getSlug(), p.getTitle(), p.getSummary(), p.getContent(), tags(p),
-            p.getPublishedAt(), p.getUpdatedAt(), readingTime(p.getContent()));
+        return new PostDetailResponse(p.getSlug(), p.getTitle(), p.getSummary(), p.getContent(),
+            p.getCoverImageUrl(), p.getCoverImageAlt(), tags(p), p.getPublishedAt(), p.getUpdatedAt(),
+            readingTime(p.getContent()));
     }
 
     private PostSummaryResponse summary(Post p) {
-        return new PostSummaryResponse(p.getSlug(), p.getTitle(), p.getSummary(), tags(p), p.getPublishedAt(), readingTime(p.getContent()));
+        return new PostSummaryResponse(p.getSlug(), p.getTitle(), p.getSummary(), p.getCoverImageUrl(),
+            p.getCoverImageAlt(), tags(p), p.getPublishedAt(), readingTime(p.getContent()));
     }
     private List<String> tags(Post p) { return p.getTags().stream().map(t -> t.getSlug()).sorted().toList(); }
     private String normalizeOptional(String value) { return value == null || value.isBlank() ? null : value.trim(); }
