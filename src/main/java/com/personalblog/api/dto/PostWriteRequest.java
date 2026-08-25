@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Future;
 import java.time.Instant;
 import java.util.List;
 
@@ -21,11 +22,17 @@ public record PostWriteRequest(
     @Size(max = 300) String coverImageAlt,
     @NotNull PostStatus status,
     Instant publishedAt,
+    @Future Instant scheduledAt,
     @NotNull @Size(max = 10) List<@Valid TagInput> tags
 ) {
     @AssertTrue(message = "cover image URL and alt text must be provided together")
     public boolean isCoverImageValid() {
         return hasText(coverImageUrl) == hasText(coverImageAlt);
+    }
+
+    @AssertTrue(message = "scheduled time is required only for scheduled posts")
+    public boolean isScheduleValid() {
+        return (status == PostStatus.SCHEDULED) == (scheduledAt != null);
     }
 
     private boolean hasText(String value) { return value != null && !value.isBlank(); }

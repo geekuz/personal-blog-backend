@@ -74,4 +74,27 @@ class AdminPostApiIntegrationTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
+
+    @Test void schedulesFuturePostAndKeepsItPrivate() throws Exception {
+        String scheduled = POST
+            .replace("\"status\": \"PUBLISHED\"", "\"status\": \"SCHEDULED\"")
+            .replace("\"tags\":", "\"scheduledAt\": \"2099-08-26T08:00:00Z\",\n          \"tags\":");
+
+        mvc.perform(post("/api/v1/admin/posts").header("X-Admin-API-Key", KEY)
+                .contentType(MediaType.APPLICATION_JSON).content(scheduled))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("SCHEDULED"))
+            .andExpect(jsonPath("$.scheduledAt").value("2099-08-26T08:00:00Z"))
+            .andExpect(jsonPath("$.publishedAt").doesNotExist());
+
+        mvc.perform(get("/api/v1/posts/api-created-post")).andExpect(status().isNotFound());
+    }
+
+    @Test void rejectsScheduledPostWithoutFutureTime() throws Exception {
+        String invalid = POST.replace("\"status\": \"PUBLISHED\"", "\"status\": \"SCHEDULED\"");
+        mvc.perform(post("/api/v1/admin/posts").header("X-Admin-API-Key", KEY)
+                .contentType(MediaType.APPLICATION_JSON).content(invalid))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
 }

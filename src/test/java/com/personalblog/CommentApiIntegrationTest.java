@@ -45,7 +45,7 @@ class CommentApiIntegrationTest {
         rateLimits.clear();
         Instant now = Instant.now();
         posts.save(new Post("commented-post", "Commented post", "Summary", "Body", null, null,
-            PostStatus.PUBLISHED, now, now, Set.of()));
+            PostStatus.PUBLISHED, now, null, now, Set.of()));
     }
 
     @Test void commentsArePublicButCreationRequiresAuthenticationAndCsrf() throws Exception {

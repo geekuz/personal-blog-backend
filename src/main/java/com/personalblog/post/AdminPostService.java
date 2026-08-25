@@ -32,7 +32,7 @@ public class AdminPostService {
         Instant now = Instant.now();
         Post post = new Post(slug, request.title().trim(), request.summary().trim(), request.content(),
             optional(request.coverImageUrl()), optional(request.coverImageAlt()), request.status(),
-            publishedAt(request, now), now, resolveTags(request.tags()));
+            publishedAt(request, now), scheduledAt(request), now, resolveTags(request.tags()));
         Post saved = posts.save(post);
         if (saved.getStatus() == PostStatus.PUBLISHED) newsletter.enqueue(saved);
         return response(saved);
@@ -48,7 +48,7 @@ public class AdminPostService {
         Instant now = Instant.now();
         post.update(nextSlug, request.title().trim(), request.summary().trim(), request.content(),
             optional(request.coverImageUrl()), optional(request.coverImageAlt()), request.status(),
-            publishedAt(request, now), now, resolveTags(request.tags()));
+            publishedAt(request, now), scheduledAt(request), now, resolveTags(request.tags()));
         if (newlyPublished) newsletter.enqueue(post);
         return response(post);
     }
@@ -66,6 +66,10 @@ public class AdminPostService {
         return request.status() == PostStatus.PUBLISHED
             ? (request.publishedAt() == null ? now : request.publishedAt())
             : null;
+    }
+
+    private Instant scheduledAt(PostWriteRequest request) {
+        return request.status() == PostStatus.SCHEDULED ? request.scheduledAt() : null;
     }
 
     private Set<Tag> resolveTags(List<TagInput> inputs) {
@@ -87,6 +91,6 @@ public class AdminPostService {
             .map(tag -> new TagInput(tag.getName(), tag.getSlug())).toList();
         return new AdminPostResponse(post.getId(), post.getSlug(), post.getTitle(), post.getSummary(),
             post.getContent(), post.getCoverImageUrl(), post.getCoverImageAlt(), post.getStatus(),
-            post.getPublishedAt(), post.getCreatedAt(), post.getUpdatedAt(), responseTags);
+            post.getPublishedAt(), post.getScheduledAt(), post.getCreatedAt(), post.getUpdatedAt(), responseTags);
     }
 }

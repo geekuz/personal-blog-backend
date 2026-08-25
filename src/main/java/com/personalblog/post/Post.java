@@ -19,6 +19,7 @@ public class Post {
     @Column(length = 300) private String coverImageAlt;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 16) private PostStatus status;
     private Instant publishedAt;
+    private Instant scheduledAt;
     @Column(nullable = false, updatable = false) private Instant createdAt;
     @Column(nullable = false) private Instant updatedAt;
     @ManyToMany(fetch = FetchType.LAZY)
@@ -29,7 +30,7 @@ public class Post {
     protected Post() {}
     public Post(String slug, String title, String summary, String content, String coverImageUrl,
                 String coverImageAlt, PostStatus status,
-                Instant publishedAt, Instant now, Set<Tag> tags) {
+                Instant publishedAt, Instant scheduledAt, Instant now, Set<Tag> tags) {
         this.slug = slug;
         this.title = title;
         this.summary = summary;
@@ -38,6 +39,7 @@ public class Post {
         this.coverImageAlt = coverImageAlt;
         this.status = status;
         this.publishedAt = publishedAt;
+        this.scheduledAt = scheduledAt;
         this.createdAt = now;
         this.updatedAt = now;
         this.tags = new LinkedHashSet<>(tags);
@@ -45,7 +47,7 @@ public class Post {
 
     public void update(String slug, String title, String summary, String content, String coverImageUrl,
                        String coverImageAlt, PostStatus status,
-                       Instant publishedAt, Instant now, Set<Tag> tags) {
+                       Instant publishedAt, Instant scheduledAt, Instant now, Set<Tag> tags) {
         this.slug = slug;
         this.title = title;
         this.summary = summary;
@@ -54,6 +56,7 @@ public class Post {
         this.coverImageAlt = coverImageAlt;
         this.status = status;
         this.publishedAt = publishedAt;
+        this.scheduledAt = scheduledAt;
         this.updatedAt = now;
         this.tags.clear();
         this.tags.addAll(tags);
@@ -67,7 +70,15 @@ public class Post {
     public String getCoverImageAlt() { return coverImageAlt; }
     public PostStatus getStatus() { return status; }
     public Instant getPublishedAt() { return publishedAt; }
+    public Instant getScheduledAt() { return scheduledAt; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public Set<Tag> getTags() { return tags; }
+
+    public void publish(Instant now) {
+        this.status = PostStatus.PUBLISHED;
+        this.publishedAt = now;
+        this.scheduledAt = null;
+        this.updatedAt = now;
+    }
 }

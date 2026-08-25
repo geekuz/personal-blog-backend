@@ -15,6 +15,7 @@ public record AdminPostResponse(
     String coverImageAlt,
     PostStatus status,
     Instant publishedAt,
+    Instant scheduledAt,
     Instant createdAt,
     Instant updatedAt,
     List<TagInput> tags

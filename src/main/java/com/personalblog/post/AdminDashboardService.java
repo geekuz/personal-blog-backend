@@ -25,7 +25,7 @@ public class AdminDashboardService {
     public AdminDashboardResponse dashboard() {
         List<AdminPostResponse> items = posts.findAllByOrderByUpdatedAtDesc().stream().map(this::response).toList();
         return new AdminDashboardResponse(posts.countByStatus(PostStatus.PUBLISHED),
-            posts.countByStatus(PostStatus.DRAFT), subscriptions.count(),
+            posts.countByStatus(PostStatus.DRAFT), posts.countByStatus(PostStatus.SCHEDULED), subscriptions.count(),
             deliveries.countByStatus(NewsletterDeliveryStatus.PENDING),
             deliveries.countByStatus(NewsletterDeliveryStatus.FAILED), items);
     }
@@ -34,6 +34,6 @@ public class AdminDashboardService {
         List<TagInput> tags = post.getTags().stream().map(tag -> new TagInput(tag.getName(), tag.getSlug())).toList();
         return new AdminPostResponse(post.getId(), post.getSlug(), post.getTitle(), post.getSummary(),
             post.getContent(), post.getCoverImageUrl(), post.getCoverImageAlt(), post.getStatus(),
-            post.getPublishedAt(), post.getCreatedAt(), post.getUpdatedAt(), tags);
+            post.getPublishedAt(), post.getScheduledAt(), post.getCreatedAt(), post.getUpdatedAt(), tags);
     }
 }
