@@ -45,8 +45,15 @@ demo posts so production content can be managed exclusively through the admin AP
 | `BLOG_FRONTEND_URL` | `http://localhost:5173` | Public frontend origin used in verification links |
 | `RESEND_API_KEY` | _(empty)_ | Secret Resend API key used for transactional email |
 | `BLOG_EMAIL_FROM` | `onboarding@resend.dev` | Verified Resend sender address |
+| `CLOUDINARY_CLOUD_NAME` | _(empty)_ | Cloudinary cloud used for admin image uploads |
+| `CLOUDINARY_API_KEY` | _(empty)_ | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | _(empty)_ | Cloudinary API secret; backend-only |
 
 Production should supply every database setting from its secret/configuration system. Hibernate validates the Flyway-managed schema and never updates it. Timestamps are stored and serialized in UTC.
+
+Admin cover-image uploads require a Cloudinary account and the three
+`CLOUDINARY_*` variables. Files are validated before upload and limited to JPEG,
+PNG, or GIF images no larger than 5 MB or 6000 × 6000 pixels.
 
 The frontend should use:
 

@@ -5,12 +5,15 @@ import com.personalblog.api.dto.AdminPostResponse;
 import com.personalblog.api.dto.PostWriteRequest;
 import com.personalblog.post.AdminDashboardService;
 import com.personalblog.post.AdminPostService;
+import com.personalblog.media.MediaStorageService;
+import com.personalblog.media.MediaUploadResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(value = "/api/v1/dashboard", produces = "application/json;charset=UTF-8")
@@ -18,8 +21,9 @@ import org.springframework.web.bind.annotation.*;
 public class AdminDashboardController {
     private final AdminDashboardService dashboard;
     private final AdminPostService posts;
-    public AdminDashboardController(AdminDashboardService dashboard, AdminPostService posts) {
-        this.dashboard = dashboard; this.posts = posts;
+    private final MediaStorageService media;
+    public AdminDashboardController(AdminDashboardService dashboard, AdminPostService posts, MediaStorageService media) {
+        this.dashboard = dashboard; this.posts = posts; this.media = media;
     }
     @GetMapping public AdminDashboardResponse get() { return dashboard.dashboard(); }
     @PostMapping(value = "/posts", consumes = "application/json")
@@ -36,4 +40,6 @@ public class AdminDashboardController {
     public ResponseEntity<Void> delete(@PathVariable @Pattern(regexp = SlugFormat.PATTERN) String slug) {
         posts.delete(slug); return ResponseEntity.noContent().build();
     }
+    @PostMapping(value = "/media", consumes = "multipart/form-data")
+    public MediaUploadResponse upload(@RequestPart("file") MultipartFile file) { return media.upload(file); }
 }

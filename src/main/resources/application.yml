@@ -20,6 +20,10 @@ spring:
     timeout: 7d
     jdbc:
       initialize-schema: never
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 server:
   forward-headers-strategy: ${SERVER_FORWARD_HEADERS_STRATEGY:native}
   servlet:
@@ -43,6 +47,11 @@ blog:
     from: ${BLOG_EMAIL_FROM:onboarding@resend.dev}
   newsletter:
     dispatch-delay-ms: ${BLOG_NEWSLETTER_DISPATCH_DELAY_MS:15000}
+  media:
+    cloudinary:
+      cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+      api-key: ${CLOUDINARY_API_KEY:}
+      api-secret: ${CLOUDINARY_API_SECRET:}
 management:
   endpoints:
     web:

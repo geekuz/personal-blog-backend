@@ -15,6 +15,7 @@ import com.personalblog.comment.CommentForbiddenException;
 import com.personalblog.comment.CommentNotFoundException;
 import com.personalblog.comment.CommentRateLimitException;
 import com.personalblog.comment.CommentEmailVerificationRequiredException;
+import com.personalblog.media.MediaUploadException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -133,6 +134,13 @@ public class ApiExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     ResponseEntity<ApiError> resourceNotFound(NoResourceFoundException ex, HttpServletRequest request) {
         return error(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Resource not found", request, null);
+    }
+
+    @ExceptionHandler(MediaUploadException.class)
+    ResponseEntity<ApiError> mediaUpload(MediaUploadException ex, HttpServletRequest request) {
+        HttpStatus status = ex.isInvalidInput() ? HttpStatus.BAD_REQUEST : HttpStatus.BAD_GATEWAY;
+        String code = ex.isInvalidInput() ? "INVALID_IMAGE" : "MEDIA_UPLOAD_FAILED";
+        return error(status, code, ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
