@@ -2,6 +2,7 @@ package com.personalblog;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -10,6 +11,8 @@ import com.personalblog.email.NewsletterEmailSender;
 import com.personalblog.newsletter.NewsletterDeliveryService;
 import com.personalblog.newsletter.NewsletterSubscription;
 import com.personalblog.newsletter.NewsletterSubscriptionRepository;
+import com.personalblog.media.MediaStorageService;
+import com.personalblog.media.MediaUploadResponse;
 import com.personalblog.post.Post;
 import com.personalblog.user.BlogUser;
 import com.personalblog.user.BlogUserRepository;
@@ -26,6 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -43,6 +47,7 @@ class AdminDashboardNewsletterIntegrationTest {
     @Autowired PasswordEncoder passwords;
     @Autowired JdbcTemplate jdbc;
     @MockitoBean NewsletterEmailSender sender;
+    @MockitoBean MediaStorageService mediaStorage;
 
     @Test void dashboardRequiresAdminRoleAndCsrfAndPublishingQueuesNewsletter() throws Exception {
         mvc.perform(get("/api/v1/dashboard")).andExpect(status().isForbidden());
@@ -69,6 +74,25 @@ class AdminDashboardNewsletterIntegrationTest {
 
         deliveries.dispatch();
         verify(sender).send(any(), eq("subscriber@example.com"), eq("Subscriber"), any(Post.class));
+    }
+
+    @Test void mediaUploadRequiresAdminAndCsrfAndReturnsStorageMetadata() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "cover.png", "image/png", new byte[] {1, 2, 3});
+        when(mediaStorage.upload(any())).thenReturn(new MediaUploadResponse(
+            "https://media.example.com/personal-blog/cover.png", "personal-blog/cover.png", 1200, 630));
+
+        mvc.perform(multipart("/api/v1/dashboard/media").file(file).with(csrf()))
+            .andExpect(status().isForbidden());
+
+        Cookie admin = createAdminAndLogin();
+        mvc.perform(multipart("/api/v1/dashboard/media").file(file).cookie(admin))
+            .andExpect(status().isForbidden());
+        mvc.perform(multipart("/api/v1/dashboard/media").file(file).cookie(admin).with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.url").value("https://media.example.com/personal-blog/cover.png"))
+            .andExpect(jsonPath("$.publicId").value("personal-blog/cover.png"))
+            .andExpect(jsonPath("$.width").value(1200))
+            .andExpect(jsonPath("$.height").value(630));
     }
 
     private BlogUser createUser(String email, boolean verified) {

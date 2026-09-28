@@ -1,96 +1,78 @@
 package com.personalblog.media;
 
-import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.time.Instant;
-import java.util.HexFormat;
-import java.util.Map;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 import javax.imageio.ImageIO;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@EnableConfigurationProperties(MediaStorageProperties.class)
 public class MediaStorageService {
     static final long MAX_BYTES = 5L * 1024 * 1024;
     static final int MAX_DIMENSION = 6000;
-    private final MediaStorageProperties properties;
-    private final RestClient restClient;
+    private static final Set<String> ALLOWED_FORMATS = Set.of("JPEG", "PNG", "GIF");
+    private final R2ObjectStorage storage;
 
-    public MediaStorageService(MediaStorageProperties properties, RestClient.Builder restClient) {
-        this.properties = properties;
-        this.restClient = restClient.build();
+    public MediaStorageService(R2ObjectStorage storage) {
+        this.storage = storage;
     }
 
     public MediaUploadResponse upload(MultipartFile file) {
-        validateFile(file);
-        if (!properties.configured()) throw new MediaUploadException("Image storage is not configured", false);
-        long timestamp = Instant.now().getEpochSecond();
-        String folder = "personal-blog";
-        String signature = sha1("folder=" + folder + "&timestamp=" + timestamp + properties.apiSecret());
-        MultipartBodyBuilder body = new MultipartBodyBuilder();
-        body.part("file", resource(file)).filename(safeFilename(file));
-        body.part("api_key", properties.apiKey());
-        body.part("timestamp", Long.toString(timestamp));
-        body.part("folder", folder);
-        body.part("signature", signature);
-        try {
-            Map<?, ?> response = restClient.post()
-                .uri("https://api.cloudinary.com/v1_1/{cloud}/image/upload", properties.cloudName())
-                .contentType(MediaType.MULTIPART_FORM_DATA).body(body.build()).retrieve().body(Map.class);
-            if (response == null) throw new MediaUploadException("Image storage returned an empty response", false);
-            return new MediaUploadResponse(value(response, "secure_url"), value(response, "public_id"),
-                number(response, "width"), number(response, "height"));
-        } catch (MediaUploadException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new MediaUploadException("Image upload failed", ex);
-        }
+        ValidatedImage image = validateFile(file);
+        String objectKey = "personal-blog/" + UUID.randomUUID() + "." + image.extension();
+        String url = storage.put(objectKey, image.bytes(), image.contentType());
+        return new MediaUploadResponse(url, objectKey, image.width(), image.height());
     }
 
-    private void validateFile(MultipartFile file) {
+    private ValidatedImage validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) throw new MediaUploadException("Choose an image to upload", true);
         if (file.getSize() > MAX_BYTES) throw new MediaUploadException("Image must be 5 MB or smaller", true);
-        try {
-            BufferedImage image = ImageIO.read(file.getInputStream());
-            if (image == null) throw new MediaUploadException("File must be a JPEG, PNG, or GIF image", true);
-            if (image.getWidth() > MAX_DIMENSION || image.getHeight() > MAX_DIMENSION)
-                throw new MediaUploadException("Image dimensions must not exceed 6000 × 6000 pixels", true);
-        } catch (IOException ex) {
+
+        byte[] bytes = read(file);
+        if (bytes.length > MAX_BYTES) throw new MediaUploadException("Image must be 5 MB or smaller", true);
+
+        try (ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            if (stream == null) throw invalidImage();
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(stream);
+            if (!readers.hasNext()) throw invalidImage();
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(stream, true, true);
+                String format = reader.getFormatName().toUpperCase(Locale.ROOT);
+                if (!ALLOWED_FORMATS.contains(format)) throw invalidImage();
+                int width = reader.getWidth(0);
+                int height = reader.getHeight(0);
+                if (width > MAX_DIMENSION || height > MAX_DIMENSION)
+                    throw new MediaUploadException("Image dimensions must not exceed 6000 × 6000 pixels", true);
+                return new ValidatedImage(bytes, extension(format), contentType(format), width, height);
+            } finally {
+                reader.dispose();
+            }
+        } catch (MediaUploadException ex) {
+            throw ex;
+        } catch (IOException | RuntimeException ex) {
             throw new MediaUploadException("Image could not be read", true);
         }
     }
 
-    private ByteArrayResource resource(MultipartFile file) {
-        try { return new ByteArrayResource(file.getBytes()); }
+    private byte[] read(MultipartFile file) {
+        try { return file.getBytes(); }
         catch (IOException ex) { throw new MediaUploadException("Image could not be read", true); }
     }
 
-    private String safeFilename(MultipartFile file) {
-        String name = file.getOriginalFilename();
-        return name == null || name.isBlank() ? "image" : name.replaceAll("[^A-Za-z0-9._-]", "_");
+    private MediaUploadException invalidImage() {
+        return new MediaUploadException("File must be a JPEG, PNG, or GIF image", true);
     }
 
-    private String sha1(String input) {
-        try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8))); }
-        catch (java.security.NoSuchAlgorithmException ex) { throw new IllegalStateException("SHA-1 is unavailable", ex); }
-    }
+    private String extension(String format) { return "JPEG".equals(format) ? "jpg" : format.toLowerCase(Locale.ROOT); }
 
-    private String value(Map<?, ?> response, String key) {
-        Object value = response.get(key);
-        if (!(value instanceof String text) || text.isBlank()) throw new MediaUploadException("Image storage response was incomplete", false);
-        return text;
-    }
+    private String contentType(String format) { return "JPEG".equals(format) ? "image/jpeg" : "image/" + format.toLowerCase(Locale.ROOT); }
 
-    private int number(Map<?, ?> response, String key) {
-        Object value = response.get(key);
-        if (!(value instanceof Number number)) throw new MediaUploadException("Image storage response was incomplete", false);
-        return number.intValue();
-    }
+    private record ValidatedImage(byte[] bytes, String extension, String contentType, int width, int height) {}
 }
