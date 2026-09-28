@@ -32,10 +32,10 @@ public class MediaStorageService {
 
     private ValidatedImage validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) throw new MediaUploadException("Choose an image to upload", true);
-        if (file.getSize() > MAX_BYTES) throw new MediaUploadException("Image must be 5 MB or smaller", true);
+        if (file.getSize() > MAX_BYTES) throw new MediaTooLargeException();
 
         byte[] bytes = read(file);
-        if (bytes.length > MAX_BYTES) throw new MediaUploadException("Image must be 5 MB or smaller", true);
+        if (bytes.length > MAX_BYTES) throw new MediaTooLargeException();
 
         try (ImageInputStream stream = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
             if (stream == null) throw invalidImage();

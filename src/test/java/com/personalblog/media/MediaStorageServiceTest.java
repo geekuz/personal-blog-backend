@@ -26,6 +26,12 @@ class MediaStorageServiceTest {
         assertEquals("File must be a JPEG, PNG, or GIF image", error.getMessage());
     }
 
+    @Test void rejectsFilesLargerThanFiveMegabytesBeforeCallingStorage() {
+        MediaTooLargeException error = assertThrows(MediaTooLargeException.class, () -> service.upload(
+            new MockMultipartFile("file", "large.png", "image/png", new byte[(int) MediaStorageService.MAX_BYTES + 1])));
+        assertEquals("Image must be 5 MB or smaller", error.getMessage());
+    }
+
     @Test void uploadsValidatedImageToR2() throws Exception {
         byte[] bytes = png(2, 3);
         when(storage.put(any(String.class), eq(bytes), eq("image/png"))).thenReturn("https://media.example.com/cover.png");

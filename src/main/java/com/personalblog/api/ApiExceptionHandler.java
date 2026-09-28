@@ -16,6 +16,7 @@ import com.personalblog.comment.CommentNotFoundException;
 import com.personalblog.comment.CommentRateLimitException;
 import com.personalblog.comment.CommentEmailVerificationRequiredException;
 import com.personalblog.media.MediaUploadException;
+import com.personalblog.media.MediaTooLargeException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -31,6 +32,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -141,6 +143,12 @@ public class ApiExceptionHandler {
         HttpStatus status = ex.isInvalidInput() ? HttpStatus.BAD_REQUEST : HttpStatus.BAD_GATEWAY;
         String code = ex.isInvalidInput() ? "INVALID_IMAGE" : "MEDIA_UPLOAD_FAILED";
         return error(status, code, ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler({MediaTooLargeException.class, MaxUploadSizeExceededException.class})
+    ResponseEntity<ApiError> mediaTooLarge(Exception ex, HttpServletRequest request) {
+        return error(HttpStatus.PAYLOAD_TOO_LARGE, "IMAGE_TOO_LARGE",
+            "Image must be 5 MB or smaller", request, null);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
