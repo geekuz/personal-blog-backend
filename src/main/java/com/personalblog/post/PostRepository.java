@@ -36,6 +36,16 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @EntityGraph(attributePaths = "tags")
     Optional<Post> findBySlug(String slug);
 
+    // Newest first, matching the public list ordering; tags batch-load lazily inside the caller's transaction.
+    List<Post> findByStatusOrderByPublishedAtDescIdDesc(PostStatus status, Pageable pageable);
+
+    @Query("""
+        select new com.personalblog.post.PublishedPostRef(p.slug, p.updatedAt) from Post p
+        where p.status = com.personalblog.post.PostStatus.PUBLISHED
+        order by p.publishedAt desc, p.id desc
+        """)
+    List<PublishedPostRef> findPublishedRefs(Pageable pageable);
+
     boolean existsBySlug(String slug);
     boolean existsByCoverImageUrl(String coverImageUrl);
     long countByStatus(PostStatus status);

@@ -44,6 +44,10 @@ blog:
     api-key: ${BLOG_ADMIN_API_KEY:}
     email: ${BLOG_ADMIN_EMAIL:}
   frontend-url: ${BLOG_FRONTEND_URL:http://localhost:5173}
+  # Used by the RSS feed and link-preview pages; keep in sync with the frontend's default <title>/description.
+  site:
+    title: "${BLOG_SITE_TITLE:otabek.dev — Writing}"
+    description: "${BLOG_SITE_DESCRIPTION:Otabek's blog — learning React by building it.}"
   email:
     resend-api-key: ${RESEND_API_KEY:}
     from: ${BLOG_EMAIL_FROM:onboarding@resend.dev}

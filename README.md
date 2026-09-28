@@ -159,6 +159,27 @@ The frontend sends credentials explicitly. Moving the frontend and API onto
 subdomains of one custom domain is recommended before relying on authentication
 for a broad audience, because some browsers restrict third-party cookies.
 
+## Feed, sitemap, and link previews
+
+These endpoints return documents, not JSON, and only ever include published
+posts. Every link in them points at `BLOG_FRONTEND_URL`, so set that to the
+production frontend origin on Render.
+
+- `GET /feed.xml` — RSS 2.0 feed of the 20 newest posts.
+- `GET /sitemap.xml` — home, about, and every published post with `lastmod`.
+- `GET /share/blog/{slug}` — minimal HTML with Open Graph and Twitter card tags
+  for link-preview bots (Telegram, X, LinkedIn, Slack, …), which do not run the
+  SPA's JavaScript. Unknown, draft, and scheduled slugs return `404`.
+
+The frontend's `vercel.json` proxies `/feed.xml` and `/sitemap.xml`, and sends
+`/blog/{slug}` to the share page only for known preview-bot user agents.
+Search-engine crawlers keep receiving the normal SPA. The feed and sitemap carry
+`s-maxage` so the proxy can cache them while the Render instance is cold. Share
+pages are `private` with `Vary: User-Agent`: the same `/blog/{slug}` URL serves
+readers the SPA, so a shared cache must never store the bot-only page.
+Override the feed/preview site name with `BLOG_SITE_TITLE` and
+`BLOG_SITE_DESCRIPTION` if needed.
+
 ## Tests and build
 
 ```bash

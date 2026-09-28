@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "posts")
@@ -22,9 +23,11 @@ public class Post {
     private Instant scheduledAt;
     @Column(nullable = false, updatable = false) private Instant createdAt;
     @Column(nullable = false) private Instant updatedAt;
+    // Batch lazy tag loads so paged post lists (public list, RSS feed) avoid one tag query per post.
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     @OrderBy("name asc")
+    @BatchSize(size = 50)
     private Set<Tag> tags = new LinkedHashSet<>();
 
     protected Post() {}
