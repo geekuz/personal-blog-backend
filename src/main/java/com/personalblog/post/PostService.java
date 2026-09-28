@@ -1,6 +1,8 @@
 package com.personalblog.post;
 
 import com.personalblog.api.dto.PostDetailResponse;
+import com.personalblog.api.dto.PostLinkResponse;
+import com.personalblog.api.dto.RelatedPostResponse;
 import com.personalblog.api.dto.PostPageResponse;
 import com.personalblog.api.dto.PostSummaryResponse;
 import java.util.List;
@@ -13,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class PostService {
+    static final int RELATED_LIMIT = 3;
+    private static final PageRequest SINGLE = PageRequest.of(0, 1);
     private final PostRepository posts;
     public PostService(PostRepository posts) { this.posts = posts; }
 
@@ -30,10 +34,15 @@ public class PostService {
     public PostDetailResponse get(String slug) {
         Post p = posts.findBySlugAndStatus(slug.toLowerCase(), PostStatus.PUBLISHED)
             .orElseThrow(() -> new PostNotFoundException(slug));
+        PostLinkResponse previous = first(posts.findOlderPublished(p.getPublishedAt(), p.getId(), SINGLE));
+        PostLinkResponse next = first(posts.findNewerPublished(p.getPublishedAt(), p.getId(), SINGLE));
+        List<RelatedPostResponse> related = posts.findRelatedPublished(p.getId(), PageRequest.of(0, RELATED_LIMIT));
         return new PostDetailResponse(p.getSlug(), p.getTitle(), p.getSummary(), p.getContent(),
             p.getCoverImageUrl(), p.getCoverImageAlt(), tags(p), p.getPublishedAt(), p.getUpdatedAt(),
-            readingTime(p.getContent()));
+            readingTime(p.getContent()), previous, next, related);
     }
+
+    private static <T> T first(List<T> items) { return items.isEmpty() ? null : items.getFirst(); }
 
     private PostSummaryResponse summary(Post p) {
         return new PostSummaryResponse(p.getSlug(), p.getTitle(), p.getSummary(), p.getCoverImageUrl(),

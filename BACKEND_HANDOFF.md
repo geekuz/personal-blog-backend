@@ -119,7 +119,7 @@ Returns one published post.
 Return `404` when the slug does not exist or belongs to a draft. Public callers
 must not be able to infer that a draft exists.
 
-The post-detail DTO may later add lightweight navigation relationships without
+The post detail also carries lightweight navigation relationships, without
 embedding complete posts:
 
 ```json
@@ -132,10 +132,11 @@ embedding complete posts:
 }
 ```
 
-If implemented, derive previous/next links from the same deterministic public
-ordering as the post list. Related-post selection must include published posts
-only and should be deterministic (for example shared tags, then publication
-date). Keep the fields absent until their behavior is implemented and tested.
+`previousPost` is the next-older and `nextPost` the next-newer published post in
+the same ordering as the post list (`publishedAt` desc, then `id` desc); either
+is `null` at the ends. `relatedPosts` holds up to three published posts sharing
+at least one tag, ranked by number of shared tags, then newest first; it is an
+empty array for untagged posts. Drafts and scheduled posts never appear.
 
 ### `GET /tags`
 

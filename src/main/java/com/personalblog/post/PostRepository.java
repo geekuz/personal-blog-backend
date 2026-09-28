@@ -1,5 +1,7 @@
 package com.personalblog.post;
 
+import com.personalblog.api.dto.PostLinkResponse;
+import com.personalblog.api.dto.RelatedPostResponse;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -45,6 +47,35 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
         order by p.publishedAt desc, p.id desc
         """)
     List<PublishedPostRef> findPublishedRefs(Pageable pageable);
+
+    // Neighbours follow the public list ordering (publishedAt desc, id desc) so navigation never skips or repeats.
+    @Query("""
+        select new com.personalblog.api.dto.PostLinkResponse(p.slug, p.title) from Post p
+        where p.status = com.personalblog.post.PostStatus.PUBLISHED
+          and (p.publishedAt < :publishedAt or (p.publishedAt = :publishedAt and p.id < :id))
+        order by p.publishedAt desc, p.id desc
+        """)
+    List<PostLinkResponse> findOlderPublished(@Param("publishedAt") Instant publishedAt, @Param("id") UUID id,
+                                              Pageable pageable);
+
+    @Query("""
+        select new com.personalblog.api.dto.PostLinkResponse(p.slug, p.title) from Post p
+        where p.status = com.personalblog.post.PostStatus.PUBLISHED
+          and (p.publishedAt > :publishedAt or (p.publishedAt = :publishedAt and p.id > :id))
+        order by p.publishedAt asc, p.id asc
+        """)
+    List<PostLinkResponse> findNewerPublished(@Param("publishedAt") Instant publishedAt, @Param("id") UUID id,
+                                              Pageable pageable);
+
+    // Most shared tags first, then newest; posts sharing no tag with the given post are never returned.
+    @Query("""
+        select new com.personalblog.api.dto.RelatedPostResponse(p.slug, p.title, p.summary) from Post p join p.tags t
+        where p.status = com.personalblog.post.PostStatus.PUBLISHED and p.id <> :id
+          and t.id in (select ct.id from Post c join c.tags ct where c.id = :id)
+        group by p.id, p.slug, p.title, p.summary, p.publishedAt
+        order by count(t) desc, p.publishedAt desc, p.id desc
+        """)
+    List<RelatedPostResponse> findRelatedPublished(@Param("id") UUID id, Pageable pageable);
 
     boolean existsBySlug(String slug);
     boolean existsByCoverImageUrl(String coverImageUrl);
