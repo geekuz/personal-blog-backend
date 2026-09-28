@@ -6,6 +6,7 @@ import com.personalblog.api.dto.TagInput;
 import com.personalblog.newsletter.NewsletterDeliveryRepository;
 import com.personalblog.newsletter.NewsletterDeliveryStatus;
 import com.personalblog.newsletter.NewsletterSubscriptionRepository;
+import com.personalblog.media.MediaStorageService;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +17,11 @@ public class AdminDashboardService {
     private final PostRepository posts;
     private final NewsletterSubscriptionRepository subscriptions;
     private final NewsletterDeliveryRepository deliveries;
+    private final MediaStorageService media;
 
     public AdminDashboardService(PostRepository posts, NewsletterSubscriptionRepository subscriptions,
-            NewsletterDeliveryRepository deliveries) {
-        this.posts = posts; this.subscriptions = subscriptions; this.deliveries = deliveries;
+            NewsletterDeliveryRepository deliveries, MediaStorageService media) {
+        this.posts = posts; this.subscriptions = subscriptions; this.deliveries = deliveries; this.media = media;
     }
 
     public AdminDashboardResponse dashboard() {
@@ -27,7 +29,7 @@ public class AdminDashboardService {
         return new AdminDashboardResponse(posts.countByStatus(PostStatus.PUBLISHED),
             posts.countByStatus(PostStatus.DRAFT), posts.countByStatus(PostStatus.SCHEDULED), subscriptions.count(),
             deliveries.countByStatus(NewsletterDeliveryStatus.PENDING),
-            deliveries.countByStatus(NewsletterDeliveryStatus.FAILED), items);
+            deliveries.countByStatus(NewsletterDeliveryStatus.FAILED), items, media.recent());
     }
 
     private AdminPostResponse response(Post post) {

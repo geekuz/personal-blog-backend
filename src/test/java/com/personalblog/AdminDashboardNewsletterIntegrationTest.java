@@ -18,6 +18,9 @@ import com.personalblog.user.BlogUser;
 import com.personalblog.user.BlogUserRepository;
 import jakarta.servlet.http.Cookie;
 import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -49,6 +52,10 @@ class AdminDashboardNewsletterIntegrationTest {
     @MockitoBean NewsletterEmailSender sender;
     @MockitoBean MediaStorageService mediaStorage;
 
+    @BeforeEach void mediaCatalogDefaults() {
+        when(mediaStorage.recent()).thenReturn(List.of());
+    }
+
     @Test void dashboardRequiresAdminRoleAndCsrfAndPublishingQueuesNewsletter() throws Exception {
         mvc.perform(get("/api/v1/dashboard")).andExpect(status().isForbidden());
         Cookie reader = createUserAndLogin("reader@example.com", false);
@@ -78,8 +85,10 @@ class AdminDashboardNewsletterIntegrationTest {
 
     @Test void mediaUploadRequiresAdminAndCsrfAndReturnsStorageMetadata() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "cover.png", "image/png", new byte[] {1, 2, 3});
+        UUID id = UUID.randomUUID();
         when(mediaStorage.upload(any())).thenReturn(new MediaUploadResponse(
-            "https://media.example.com/personal-blog/cover.png", "personal-blog/cover.png", 1200, 630));
+            id, "https://media.example.com/personal-blog/cover.png", "personal-blog/cover.png",
+            "cover.png", "image/png", 3, 1200, 630, Instant.parse("2026-09-28T12:00:00Z")));
 
         mvc.perform(multipart("/api/v1/dashboard/media").file(file).with(csrf()))
             .andExpect(status().isForbidden());
@@ -89,10 +98,23 @@ class AdminDashboardNewsletterIntegrationTest {
             .andExpect(status().isForbidden());
         mvc.perform(multipart("/api/v1/dashboard/media").file(file).cookie(admin).with(csrf()))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(id.toString()))
             .andExpect(jsonPath("$.url").value("https://media.example.com/personal-blog/cover.png"))
             .andExpect(jsonPath("$.publicId").value("personal-blog/cover.png"))
             .andExpect(jsonPath("$.width").value(1200))
             .andExpect(jsonPath("$.height").value(630));
+    }
+
+    @Test void mediaDeleteRequiresAdminAndCsrf() throws Exception {
+        UUID id = UUID.randomUUID();
+        Cookie admin = createAdminAndLogin();
+
+        mvc.perform(delete("/api/v1/dashboard/media/{id}", id).cookie(admin))
+            .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/v1/dashboard/media/{id}", id).cookie(admin).with(csrf()))
+            .andExpect(status().isNoContent());
+
+        verify(mediaStorage).delete(id);
     }
 
     private BlogUser createUser(String email, boolean verified) {

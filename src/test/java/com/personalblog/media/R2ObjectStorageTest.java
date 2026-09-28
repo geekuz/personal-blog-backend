@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -57,6 +58,18 @@ class R2ObjectStorageTest {
             () -> storage.put("personal-blog/image.png", IMAGE, "image/png"));
 
         assertEquals("Image storage public URL is invalid", error.getMessage());
+    }
+
+    @Test void deletesObjectFromConfiguredBucket() {
+        S3Client client = mock(S3Client.class);
+        R2ObjectStorage storage = new R2ObjectStorage(properties("https://media.example.com"), client);
+
+        storage.delete("personal-blog/image.png");
+
+        ArgumentCaptor<DeleteObjectRequest> request = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+        verify(client).deleteObject(request.capture());
+        assertEquals("personal-blog-media", request.getValue().bucket());
+        assertEquals("personal-blog/image.png", request.getValue().key());
     }
 
     private MediaStorageProperties properties(String publicUrl) {

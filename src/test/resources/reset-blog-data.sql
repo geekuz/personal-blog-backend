@@ -1,4 +1,5 @@
 delete from post_tags;
+delete from media_assets;
 delete from post_comments;
 delete from newsletter_deliveries;
 delete from posts;

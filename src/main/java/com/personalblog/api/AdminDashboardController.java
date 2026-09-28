@@ -10,6 +10,7 @@ import com.personalblog.media.MediaUploadResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import java.net.URI;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -42,4 +43,8 @@ public class AdminDashboardController {
     }
     @PostMapping(value = "/media", consumes = "multipart/form-data")
     public MediaUploadResponse upload(@RequestPart("file") MultipartFile file) { return media.upload(file); }
+    @DeleteMapping("/media/{id}")
+    public ResponseEntity<Void> deleteMedia(@PathVariable UUID id) {
+        media.delete(id); return ResponseEntity.noContent().build();
+    }
 }

@@ -3,6 +3,8 @@ package com.personalblog.api;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.personalblog.media.MediaTooLargeException;
+import com.personalblog.media.MediaAssetInUseException;
+import com.personalblog.media.MediaAssetNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,18 @@ class ApiExceptionHandlerTest {
 
     @Test void mapsMultipartParserLimitToPayloadTooLarge() {
         assertTooLarge(handler.mediaTooLarge(new MaxUploadSizeExceededException(6L * 1024 * 1024), request));
+    }
+
+    @Test void mapsMissingMediaToNotFound() {
+        ResponseEntity<ApiError> response = handler.mediaNotFound(new MediaAssetNotFoundException(), request);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("MEDIA_NOT_FOUND", response.getBody().code());
+    }
+
+    @Test void mapsReferencedMediaToConflict() {
+        ResponseEntity<ApiError> response = handler.mediaInUse(new MediaAssetInUseException(), request);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("MEDIA_IN_USE", response.getBody().code());
     }
 
     private void assertTooLarge(ResponseEntity<ApiError> response) {

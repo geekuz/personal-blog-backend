@@ -37,6 +37,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     Optional<Post> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
+    boolean existsByCoverImageUrl(String coverImageUrl);
     long countByStatus(PostStatus status);
     @EntityGraph(attributePaths = "tags")
     List<Post> findAllByOrderByUpdatedAtDesc();

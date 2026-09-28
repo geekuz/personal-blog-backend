@@ -17,6 +17,8 @@ import com.personalblog.comment.CommentRateLimitException;
 import com.personalblog.comment.CommentEmailVerificationRequiredException;
 import com.personalblog.media.MediaUploadException;
 import com.personalblog.media.MediaTooLargeException;
+import com.personalblog.media.MediaAssetNotFoundException;
+import com.personalblog.media.MediaAssetInUseException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -149,6 +151,16 @@ public class ApiExceptionHandler {
     ResponseEntity<ApiError> mediaTooLarge(Exception ex, HttpServletRequest request) {
         return error(HttpStatus.PAYLOAD_TOO_LARGE, "IMAGE_TOO_LARGE",
             "Image must be 5 MB or smaller", request, null);
+    }
+
+    @ExceptionHandler(MediaAssetNotFoundException.class)
+    ResponseEntity<ApiError> mediaNotFound(MediaAssetNotFoundException ex, HttpServletRequest request) {
+        return error(HttpStatus.NOT_FOUND, "MEDIA_NOT_FOUND", "Image not found", request, null);
+    }
+
+    @ExceptionHandler(MediaAssetInUseException.class)
+    ResponseEntity<ApiError> mediaInUse(MediaAssetInUseException ex, HttpServletRequest request) {
+        return error(HttpStatus.CONFLICT, "MEDIA_IN_USE", "Image is used by a post and cannot be deleted", request, null);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

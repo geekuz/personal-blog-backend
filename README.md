@@ -100,6 +100,11 @@ Admin endpoints:
 - `GET /api/v1/admin/posts/{slug}` returns a draft or published post.
 - `PUT /api/v1/admin/posts/{slug}` replaces a post using the same JSON shape.
 - `DELETE /api/v1/admin/posts/{slug}` permanently deletes a post.
+- `POST /api/v1/dashboard/media` uploads and catalogs a cover image for a session-authenticated admin.
+- `DELETE /api/v1/dashboard/media/{id}` deletes an unused catalog image for a session-authenticated admin.
+
+The admin dashboard returns the latest 100 cataloged images so uploaded media
+can be reused. An image currently referenced by a post cannot be deleted.
 
 Use `"status": "DRAFT"` to keep a post out of all public endpoints. Slugs must
 be lowercase kebab-case. `publishedAt` accepts an optional ISO-8601 UTC timestamp,
@@ -173,6 +178,13 @@ Migrations live in `src/main/resources/db/migration`:
 - `V4` removes the demo posts and their unused tags.
 - `V5` creates users, roles, and persistent Spring Session tables.
 - `V6` creates single-use email verification tokens.
+- `V7` creates password-reset tokens.
+- `V8` creates newsletter subscriptions.
+- `V9` creates verified-user comments.
+- `V10` creates newsletter delivery tracking.
+- `V11` adds post cover images.
+- `V12` adds scheduled publishing.
+- `V13` catalogs uploaded media assets.
 
 Never edit an applied production migration. Add a new versioned migration instead.
 

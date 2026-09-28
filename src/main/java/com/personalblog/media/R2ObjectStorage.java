@@ -15,6 +15,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 @Component
 @EnableConfigurationProperties(MediaStorageProperties.class)
@@ -48,6 +49,19 @@ public class R2ObjectStorage {
             throw ex;
         } catch (RuntimeException ex) {
             throw new MediaUploadException("Image upload failed", ex);
+        }
+    }
+
+    public void delete(String objectKey) {
+        if (!properties.configured() || client == null)
+            throw new MediaUploadException("Image storage is not configured", false);
+        try {
+            client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(properties.bucketName())
+                .key(objectKey)
+                .build());
+        } catch (RuntimeException ex) {
+            throw new MediaUploadException("Image deletion failed", ex);
         }
     }
 
