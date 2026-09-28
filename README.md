@@ -224,3 +224,8 @@ docker run --rm -p 8080:8080 \
 
 Only Actuator health is exposed, without details. Admin writes are denied when
 `BLOG_ADMIN_API_KEY` is empty and use constant-time key comparison when enabled.
+
+Render auto-deploys `main` on every push only while the **Render GitHub App** is
+installed on the GitHub account with access to this repository. Without it,
+Render can still build the public repo, but every deploy must be triggered
+manually.
