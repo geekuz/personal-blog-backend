@@ -14,7 +14,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 /** Renders the RSS 2.0 feed and XML sitemap. StAX handles escaping; characters XML 1.0 forbids are dropped. */
 final class FeedXmlWriter {
-    static final List<String> STATIC_PATHS = List.of("/", "/projects", "/about");
+    static final List<String> STATIC_PATHS = List.of("/", "/projects", "/projects/otabek-dev", "/about");
 
     private static final XMLOutputFactory FACTORY = XMLOutputFactory.newFactory();
     private static final DateTimeFormatter RFC_1123 = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC);

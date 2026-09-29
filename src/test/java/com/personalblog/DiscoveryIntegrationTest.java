@@ -61,6 +61,7 @@ class DiscoveryIntegrationTest {
             .andExpect(header().string("Content-Type", startsWith("application/xml")))
             .andExpect(content().string(containsString("<loc>" + SITE + "/</loc>")))
             .andExpect(content().string(containsString("<loc>" + SITE + "/projects</loc>")))
+            .andExpect(content().string(containsString("<loc>" + SITE + "/projects/otabek-dev</loc>")))
             .andExpect(content().string(containsString("<loc>" + SITE + "/about</loc>")))
             .andExpect(content().string(containsString("<loc>" + SITE + "/blog/why-i-chose-react</loc>")))
             .andExpect(content().string(containsString("<lastmod>2026-09-01</lastmod>")))
