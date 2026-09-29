@@ -63,6 +63,7 @@ class DiscoveryIntegrationTest {
             .andExpect(content().string(containsString("<loc>" + SITE + "/projects</loc>")))
             .andExpect(content().string(containsString("<loc>" + SITE + "/projects/otabek-dev</loc>")))
             .andExpect(content().string(containsString("<loc>" + SITE + "/about</loc>")))
+            .andExpect(content().string(containsString("<loc>" + SITE + "/contact</loc>")))
             .andExpect(content().string(containsString("<loc>" + SITE + "/blog/why-i-chose-react</loc>")))
             .andExpect(content().string(containsString("<lastmod>2026-09-01</lastmod>")))
             .andExpect(content().string(not(containsString("secret-draft"))))
