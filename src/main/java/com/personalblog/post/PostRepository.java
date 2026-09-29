@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
@@ -15,22 +16,19 @@ import java.util.List;
 import java.time.Instant;
 import jakarta.persistence.LockModeType;
 
-public interface PostRepository extends JpaRepository<Post, UUID> {
+public interface PostRepository extends JpaRepository<Post, UUID>, JpaSpecificationExecutor<Post> {
+    // Newest-first listing without a search query; searches go through PostSearchSpecifications.
     @Query(value = """
-        select distinct p from Post p left join p.tags t
+        select p from Post p
         where p.status = com.personalblog.post.PostStatus.PUBLISHED
-          and (:q is null or lower(p.title) like lower(concat('%', :q, '%')) escape '\\'
-               or lower(p.summary) like lower(concat('%', :q, '%')) escape '\\')
           and (:tag is null or exists (select 1 from p.tags tf where tf.slug = :tag))
         """,
         countQuery = """
         select count(p) from Post p
         where p.status = com.personalblog.post.PostStatus.PUBLISHED
-          and (:q is null or lower(p.title) like lower(concat('%', :q, '%')) escape '\\'
-               or lower(p.summary) like lower(concat('%', :q, '%')) escape '\\')
           and (:tag is null or exists (select 1 from p.tags tf where tf.slug = :tag))
         """)
-    Page<Post> findPublished(@Param("q") String q, @Param("tag") String tag, Pageable pageable);
+    Page<Post> findPublished(@Param("tag") String tag, Pageable pageable);
 
     @EntityGraph(attributePaths = "tags")
     Optional<Post> findBySlugAndStatus(String slug, PostStatus status);

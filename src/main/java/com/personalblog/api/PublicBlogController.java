@@ -9,6 +9,7 @@ import com.personalblog.tag.TagService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ public class PublicBlogController {
     @GetMapping("/posts")
     public PostPageResponse posts(@RequestParam(defaultValue = "0") @Min(0) int page,
                                   @RequestParam(defaultValue = "10") @Min(1) @Max(50) int size,
-                                  @RequestParam(required = false) String q,
+                                  @RequestParam(required = false) @Size(max = 200) String q,
                                   @RequestParam(required = false) @Pattern(regexp = SlugFormat.PATTERN, message = SlugFormat.MESSAGE) String tag) {
         return posts.list(page, size, q, tag);
     }
