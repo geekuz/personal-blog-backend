@@ -21,14 +21,20 @@ public class NewsletterSubscriptionService {
     @Transactional(readOnly = true)
     public boolean isSubscribed(String email) {
         BlogUser user = verifiedUser(email);
-        return subscriptions.existsByUserId(user.getId());
+        return subscriptions.findByUserId(user.getId())
+            .map(NewsletterSubscription::isConfirmed)
+            .orElse(false);
     }
 
     public void subscribe(String email) {
         BlogUser user = verifiedUser(email);
-        if (!subscriptions.existsByUserId(user.getId())) {
-            subscriptions.save(new NewsletterSubscription(user, Instant.now()));
+        Instant now = Instant.now();
+        NewsletterSubscription subscription = subscriptions.findByEmailIgnoreCase(user.getEmail())
+            .orElseGet(() -> new NewsletterSubscription(user, now));
+        if (subscription.getUser() == null || !subscription.isConfirmed()) {
+            subscription.attachUser(user, now);
         }
+        subscriptions.save(subscription);
     }
 
     public void unsubscribe(String email) {

@@ -2,6 +2,7 @@ delete from post_tags;
 delete from media_assets;
 delete from post_comments;
 delete from newsletter_deliveries;
+delete from newsletter_subscription_tokens;
 delete from posts;
 delete from tags;
 delete from spring_session_attributes;

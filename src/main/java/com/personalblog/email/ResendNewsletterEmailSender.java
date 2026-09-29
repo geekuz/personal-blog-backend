@@ -31,15 +31,17 @@ public class ResendNewsletterEmailSender implements NewsletterEmailSender {
         this.apiKey = apiKey; this.from = from; this.frontendUrl = frontendUrl.replaceAll("/+$", "");
     }
 
-    @Override public void send(UUID deliveryId, String recipient, String displayName, Post post) {
+    @Override public void send(UUID deliveryId, String recipient, String displayName, Post post,
+            String unsubscribeUrl) {
         if (apiKey.isBlank()) throw new EmailDeliveryException("Resend is not configured");
         String url = frontendUrl + "/blog/" + post.getSlug();
+        String safeUnsubscribeUrl = HtmlUtils.htmlEscape(unsubscribeUrl);
         String html = """
             <h1>%s</h1><p>Hello %s,</p><p>%s</p>
             <p><a href="%s">Read the article</a></p>
-            <p>You received this because you subscribed on otabek.dev. You can unsubscribe from your account.</p>
+            <p>You received this because you subscribed on otabek.dev. <a href="%s">Unsubscribe</a>.</p>
             """.formatted(HtmlUtils.htmlEscape(post.getTitle()), HtmlUtils.htmlEscape(displayName),
-                HtmlUtils.htmlEscape(post.getSummary()), HtmlUtils.htmlEscape(url));
+                HtmlUtils.htmlEscape(post.getSummary()), HtmlUtils.htmlEscape(url), safeUnsubscribeUrl);
         try {
             client.post().uri("/emails")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)

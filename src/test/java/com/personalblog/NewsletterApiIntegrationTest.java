@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.personalblog.user.BlogUser;
 import com.personalblog.user.BlogUserRepository;
+import com.personalblog.newsletter.NewsletterSubscription;
+import com.personalblog.newsletter.NewsletterSubscriptionRepository;
 import jakarta.servlet.http.Cookie;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,7 @@ class NewsletterApiIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired BlogUserRepository users;
     @Autowired PasswordEncoder passwords;
+    @Autowired NewsletterSubscriptionRepository subscriptions;
 
     @Test void requiresAuthentication() throws Exception {
         mvc.perform(get("/api/v1/newsletter/subscription"))
@@ -56,6 +59,20 @@ class NewsletterApiIntegrationTest {
             .andExpect(status().isNoContent());
         mvc.perform(get("/api/v1/newsletter/subscription").cookie(session))
             .andExpect(status().isOk()).andExpect(jsonPath("$.subscribed").value(false));
+    }
+
+    @Test void verifiedAccountClaimsAnExistingPendingPublicSubscription() throws Exception {
+        subscriptions.save(new NewsletterSubscription("reader@example.com", Instant.now()));
+        Cookie session = registerVerifyAndLogin();
+
+        mvc.perform(post("/api/v1/newsletter/subscription").cookie(session).with(csrf()))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.subscribed").value(true));
+
+        org.assertj.core.api.Assertions.assertThat(subscriptions.count()).isOne();
+        NewsletterSubscription subscription = subscriptions.findByEmailIgnoreCase("reader@example.com").orElseThrow();
+        org.assertj.core.api.Assertions.assertThat(subscription.isConfirmed()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(subscriptions.existsByUserId(
+            users.findByEmail("reader@example.com").orElseThrow().getId())).isTrue();
     }
 
     private Cookie registerAndLogin() throws Exception {

@@ -6,6 +6,9 @@ import com.personalblog.post.Post;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -19,16 +22,24 @@ public class NewsletterDeliveryService {
     private final NewsletterDeliveryRepository deliveries;
     private final NewsletterSubscriptionRepository subscriptions;
     private final NewsletterEmailSender sender;
+    private final NewsletterTokenService tokens;
+    private final String frontendUrl;
 
     public NewsletterDeliveryService(NewsletterDeliveryRepository deliveries,
-            NewsletterSubscriptionRepository subscriptions, NewsletterEmailSender sender) {
-        this.deliveries = deliveries; this.subscriptions = subscriptions; this.sender = sender;
+            NewsletterSubscriptionRepository subscriptions, NewsletterEmailSender sender,
+            NewsletterTokenService tokens,
+            @Value("${blog.frontend-url:http://localhost:5173}") String frontendUrl) {
+        this.deliveries = deliveries;
+        this.subscriptions = subscriptions;
+        this.sender = sender;
+        this.tokens = tokens;
+        this.frontendUrl = frontendUrl.replaceAll("/+$", "");
     }
 
     @Transactional
     public void enqueue(Post post) {
         Instant now = Instant.now();
-        List<NewsletterDelivery> pending = subscriptions.findAllByOrderBySubscribedAtAsc().stream()
+        List<NewsletterDelivery> pending = subscriptions.findAllByConfirmedAtIsNotNullOrderBySubscribedAtAsc().stream()
             .filter(subscription -> !deliveries.existsByPostIdAndSubscriptionId(post.getId(), subscription.getId()))
             .map(subscription -> new NewsletterDelivery(post, subscription, now)).toList();
         deliveries.saveAll(pending);
@@ -44,8 +55,12 @@ public class NewsletterDeliveryService {
         for (NewsletterDelivery delivery : batch) {
             delivery.markSending();
             try {
-                var user = delivery.getSubscription().getUser();
-                sender.send(delivery.getId(), user.getEmail(), user.getDisplayName(), delivery.getPost());
+                NewsletterSubscription subscription = delivery.getSubscription();
+                String rawToken = tokens.issueUnsubscribe(subscription, Instant.now());
+                String unsubscribeUrl = frontendUrl + "/newsletter/unsubscribe?token="
+                    + URLEncoder.encode(rawToken, StandardCharsets.UTF_8);
+                sender.send(delivery.getId(), subscription.getEmail(), subscription.getDisplayName(),
+                    delivery.getPost(), unsubscribeUrl);
                 delivery.markSent(Instant.now());
             } catch (EmailDeliveryException ex) {
                 long minutes = Math.min(60, 1L << Math.min(delivery.getAttempts(), 5));

@@ -30,6 +30,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/verification/resend",
                     "/api/v1/auth/password/change").authenticated()
+                .requestMatchers("/api/v1/newsletter/public/**").permitAll()
                 .requestMatchers("/api/v1/newsletter/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/posts/*/comments").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/comments/*").authenticated()

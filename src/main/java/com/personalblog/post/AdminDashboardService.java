@@ -27,7 +27,8 @@ public class AdminDashboardService {
     public AdminDashboardResponse dashboard() {
         List<AdminPostResponse> items = posts.findAllByOrderByUpdatedAtDesc().stream().map(this::response).toList();
         return new AdminDashboardResponse(posts.countByStatus(PostStatus.PUBLISHED),
-            posts.countByStatus(PostStatus.DRAFT), posts.countByStatus(PostStatus.SCHEDULED), subscriptions.count(),
+            posts.countByStatus(PostStatus.DRAFT), posts.countByStatus(PostStatus.SCHEDULED),
+            subscriptions.countByConfirmedAtIsNotNull(),
             deliveries.countByStatus(NewsletterDeliveryStatus.PENDING),
             deliveries.countByStatus(NewsletterDeliveryStatus.FAILED), items, media.recent());
     }

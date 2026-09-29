@@ -26,6 +26,9 @@ class PostgreSqlMigrationIntegrationTest {
         assertThat(resetTable).isZero();
         Integer subscriptions = jdbc.queryForObject("select count(*) from newsletter_subscriptions", Integer.class);
         assertThat(subscriptions).isZero();
+        Integer newsletterTokens = jdbc.queryForObject(
+            "select count(*) from newsletter_subscription_tokens", Integer.class);
+        assertThat(newsletterTokens).isZero();
         Integer comments = jdbc.queryForObject("select count(*) from post_comments", Integer.class);
         assertThat(comments).isZero();
         Integer deliveries = jdbc.queryForObject("select count(*) from newsletter_deliveries", Integer.class);
@@ -35,5 +38,11 @@ class PostgreSqlMigrationIntegrationTest {
             where table_name = 'posts' and column_name in ('cover_image_url', 'cover_image_alt')
             """, Integer.class);
         assertThat(coverColumns).isEqualTo(2);
+        Integer publicSubscriptionColumns = jdbc.queryForObject("""
+            select count(*) from information_schema.columns
+            where table_name = 'newsletter_subscriptions'
+              and column_name in ('email', 'display_name', 'confirmed_at')
+            """, Integer.class);
+        assertThat(publicSubscriptionColumns).isEqualTo(3);
     }
 }

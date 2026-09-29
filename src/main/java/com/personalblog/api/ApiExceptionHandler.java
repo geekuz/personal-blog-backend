@@ -11,6 +11,7 @@ import com.personalblog.user.InvalidPasswordResetTokenException;
 import com.personalblog.email.EmailDeliveryException;
 import com.personalblog.config.AuthRateLimitException;
 import com.personalblog.newsletter.EmailVerificationRequiredException;
+import com.personalblog.newsletter.InvalidNewsletterTokenException;
 import com.personalblog.comment.CommentForbiddenException;
 import com.personalblog.comment.CommentNotFoundException;
 import com.personalblog.comment.CommentRateLimitException;
@@ -106,6 +107,13 @@ public class ApiExceptionHandler {
                                                         HttpServletRequest request) {
         return error(HttpStatus.FORBIDDEN, "EMAIL_VERIFICATION_REQUIRED",
             "Verify your email before subscribing to the newsletter", request, null);
+    }
+
+    @ExceptionHandler(InvalidNewsletterTokenException.class)
+    ResponseEntity<ApiError> invalidNewsletterToken(InvalidNewsletterTokenException ex,
+                                                      HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_NEWSLETTER_TOKEN",
+            "Newsletter link is invalid or expired", request, null);
     }
 
     @ExceptionHandler(CommentNotFoundException.class)

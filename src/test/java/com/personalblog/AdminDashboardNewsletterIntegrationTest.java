@@ -80,7 +80,8 @@ class AdminDashboardNewsletterIntegrationTest {
             .andExpect(jsonPath("$.posts[0].slug").value("dashboard-post"));
 
         deliveries.dispatch();
-        verify(sender).send(any(), eq("subscriber@example.com"), eq("Subscriber"), any(Post.class));
+        verify(sender).send(any(), eq("subscriber@example.com"), eq("Subscriber"),
+            any(Post.class), contains("/newsletter/unsubscribe?token="));
     }
 
     @Test void mediaUploadRequiresAdminAndCsrfAndReturnsStorageMetadata() throws Exception {

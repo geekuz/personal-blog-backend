@@ -24,7 +24,10 @@ public class AuthRateLimitInterceptor implements HandlerInterceptor {
         "/api/v1/auth/password/reset", new Limit(10, Duration.ofMinutes(15)),
         "/api/v1/auth/password/change", new Limit(5, Duration.ofMinutes(15)),
         "/api/v1/auth/verify-email", new Limit(20, Duration.ofMinutes(15)),
-        "/api/v1/auth/verification/resend", new Limit(5, Duration.ofMinutes(15))
+        "/api/v1/auth/verification/resend", new Limit(5, Duration.ofMinutes(15)),
+        "/api/v1/newsletter/public/requests", new Limit(5, Duration.ofMinutes(15)),
+        "/api/v1/newsletter/public/confirm", new Limit(20, Duration.ofMinutes(15)),
+        "/api/v1/newsletter/public/unsubscribe", new Limit(20, Duration.ofMinutes(15))
     );
 
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
