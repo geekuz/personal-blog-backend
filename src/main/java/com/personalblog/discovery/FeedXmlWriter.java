@@ -19,6 +19,7 @@ final class FeedXmlWriter {
         "/projects",
         "/projects/otabek-dev",
         "/projects/java-load-balancer",
+        "/projects/build-your-own-sort",
         "/about",
         "/contact"
     );
